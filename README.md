@@ -91,9 +91,14 @@ O diagnóstico em tempo real calcula a porcentagem exata de correspondência e d
 - **Padrão DBF Estrito**:
   - Respeita rigorosamente os tipos declarados no cabeçalho binário DBF ('C' para Utf8, 'D' para Date32, 'N'/'F' para Int32/Int64/Float64).
 
-### 5. Suporte Completo a Arquivos Compactados e Arquivos DBC (DATASUS)
-- Aceita diretamente arquivos compactados `.zip`, `.rar`, `.7z` e arquivos **`.dbc`** proprietários do DATASUS (comprimidos pelo algoritmo BLAST/implode do FTP DISSEMIN).
-- Localiza e descompacta os registros transparentemente em memória/diretório temporário, converte diretamente para Parquet e **remove os arquivos temporários imediatamente** após o término, eliminando a dependência do TabWin para pesquisadores e analistas de dados!
+### 5. Descompressão Nativa de Arquivos DBC do DATASUS (FTP DISSEMIN)
+
+> [!IMPORTANT]
+> **Fim da Dependência do TabWin e read.dbc**: No repositório público oficial do DATASUS (`ftp://ftp.datasus.gov.br/dissemin/publicos/`), os microdados abertos para pesquisadores são distribuídos no formato proprietário **`.dbc`** (compactados pelo algoritmo BLAST/implode da PKWare). 
+> O **Conversor de Bases da Vigilância para Parquet** agora incorpora suporte nativo e transparente ao formato `.dbc`:
+> - **Arrastar e Soltar Direto**: Basta soltar qualquer arquivo `.dbc` na janela do programa.
+> - **Zero Configuração**: Descompacta em memória/temporário na velocidade nativa do Rust, detecta o sistema epidemiológico, audita os campos como **Base Anonimizada** e grava diretamente em Apache Parquet ZSTD.
+> - **Suporte a Pacotes Compactados**: Também aceita pacotes `.zip`, `.rar` e `.7z` contendo arquivos DBF internos, com descarte e faxina automática de temporários ao final do processamento.
 
 ### 6. Junção de Arquivos (Merge) ou Conversão Individual
 - **Conversão Individual**: Cada DBF gera seu `.parquet` correspondente (com opção de escolher nome de saída quando processado arquivo avulso).
