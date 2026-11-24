@@ -1,0 +1,17 @@
+# Rust build target
+/target
+
+# Compiled binaries and release distributions (distribute via GitHub Releases)
+/dist
+
+# Bases de dados e amostras epidemiológicas (Dados Protegidos - LGPD)
+/Bases de Exemplo/
+*.dbf
+*.DBF
+*.parquet
+*.parquet.tmp
+
+# Arquivos temporários do SO
+.DS_Store
+Thumbs.db
+*.tmp
