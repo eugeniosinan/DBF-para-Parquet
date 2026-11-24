@@ -31,7 +31,7 @@ impl PreProcessingReport {
         md.push_str(&format!("**Data/Hora da Análise:** {}\n\n", self.generated_at));
 
         if !self.invalid_archives_without_dbf.is_empty() {
-            md.push_str("### ⚠️ Arquivos Compactados Sem DBF (Serão Desconsiderados):\n");
+            md.push_str("### ⚠ Arquivos Compactados Sem DBF (Serão Desconsiderados):\n");
             for item in &self.invalid_archives_without_dbf {
                 md.push_str(&format!("- **{}** (nenhum arquivo .dbf encontrado internamente)\n", item));
             }
@@ -145,7 +145,7 @@ impl PostProcessingReport {
         md.push_str(&format!("**Total de Registros Convertidos:** {}\n\n", self.total_records_written));
 
         if !self.ignored_archives_without_dbf.is_empty() {
-            md.push_str("### ⚠️ Arquivos Compactados Sem DBF Ignorados:\n");
+            md.push_str("### ⚠ Arquivos Compactados Sem DBF Ignorados:\n");
             for f in &self.ignored_archives_without_dbf {
                 md.push_str(&format!("- {}\n", f));
             }

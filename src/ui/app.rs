@@ -58,6 +58,47 @@ pub enum WorkerMessage {
     Error(String),
 }
 
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Default)]
+pub enum ThemeMode {
+    #[default]
+    Dark,
+    DatasusBlue,
+    Light,
+}
+
+impl ThemeMode {
+    pub fn display_name(&self) -> &str {
+        match self {
+            ThemeMode::Dark => "Escuro",
+            ThemeMode::DatasusBlue => "Azul Saúde",
+            ThemeMode::Light => "Claro",
+        }
+    }
+
+    pub fn apply(&self, ctx: &egui::Context) {
+        match self {
+            ThemeMode::Dark => {
+                ctx.set_visuals(egui::Visuals::dark());
+            }
+            ThemeMode::Light => {
+                ctx.set_visuals(egui::Visuals::light());
+            }
+            ThemeMode::DatasusBlue => {
+                let mut visuals = egui::Visuals::dark();
+                visuals.panel_fill = Color32::from_rgb(15, 23, 42); // slate-900
+                visuals.window_fill = Color32::from_rgb(30, 41, 59); // slate-800
+                visuals.extreme_bg_color = Color32::from_rgb(10, 15, 29); // slate-950
+                visuals.widgets.noninteractive.bg_fill = Color32::from_rgb(30, 41, 59);
+                visuals.widgets.inactive.bg_fill = Color32::from_rgb(51, 65, 85); // slate-700
+                visuals.widgets.hovered.bg_fill = Color32::from_rgb(71, 85, 105);
+                visuals.widgets.active.bg_fill = Color32::from_rgb(14, 116, 144); // cyan-700
+                visuals.selection.bg_fill = Color32::from_rgb(2, 132, 199); // sky-600
+                ctx.set_visuals(visuals);
+            }
+        }
+    }
+}
+
 pub struct DbfConverterApp {
     // Arquivos brutos adicionados pelo usuário
     input_paths: Vec<PathBuf>,
@@ -73,6 +114,11 @@ pub struct DbfConverterApp {
     encoding_choice: EncodingChoice,
     custom_output_dir: Option<PathBuf>,
     custom_output_filename: String,
+
+    // Tema e Imagem
+    theme_mode: ThemeMode,
+    theme_initialized: bool,
+    logo_texture: Option<egui::TextureHandle>,
 
     // Modal de Informações
     info_modal: Option<InfoModalType>,
@@ -103,6 +149,9 @@ impl Default for DbfConverterApp {
             encoding_choice: EncodingChoice::AutomaticStandard,
             custom_output_dir: None,
             custom_output_filename: "base_vigilancia_consolidada.parquet".to_string(),
+            theme_mode: ThemeMode::Dark,
+            theme_initialized: false,
+            logo_texture: None,
             info_modal: None,
             pre_report: None,
             post_report: None,
@@ -473,57 +522,98 @@ impl eframe::App for DbfConverterApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         self.check_worker_messages();
 
+        if !self.theme_initialized {
+            self.theme_mode.apply(ctx);
+            self.theme_initialized = true;
+        }
+
+        if self.logo_texture.is_none() {
+            let img_bytes = include_bytes!("../../docs/hex_sticker.png");
+            if let Ok(dynamic_img) = image::load_from_memory(img_bytes) {
+                let rgba = dynamic_img.to_rgba8();
+                let size = [rgba.width() as usize, rgba.height() as usize];
+                let color_image = egui::ColorImage::from_rgba_unmultiplied(size, rgba.as_raw());
+                self.logo_texture = Some(ctx.load_texture("hex_logo", color_image, Default::default()));
+            }
+        }
+
         // Modal de Informações sobre os Padrões de Conversão e Autoria
         if let Some(modal) = self.info_modal {
             let mut is_open = true;
-            let (title, content) = match modal {
-                InfoModalType::HealthPattern => (
-                    "ℹ Informações — Padrão Saúde / DuckDB",
-                    "Como funciona o Padrão Saúde / DuckDB:\n\n\
-                    1. Conversão Inteligente de Datas:\n\
-                       • Colunas de data declaradas como texto no DBF (tipo 'C'), como DTOBITO, DTNASC, DT_NOTIFIC, DT_SIN_PRI, DT_PRISINT, etc., são convertidas no formato nativo DATE (YYYY-MM-DD) do Parquet.\n\
-                       • Extrai dígitos numéricos e reconhece tanto datas brasileiras (DDMMYYYY ou DD/MM/YYYY) quanto formato internacional (YYYYMMDD ou YYYY-MM-DD).\n\n\
-                    2. Limpeza de Campos Textuais:\n\
-                       • Todos os demais campos de texto permanecem como String UTF-8 limpa.\n\
-                       • Remove espaços excedentes nas extremidades (TRIM).\n\
-                       • Converte valores vazios, compostos apenas por espaços ou preenchidos com underscores ('_________') em NULL, evitando ruídos estatísticos.",
-                ),
-                InfoModalType::StrictDbf => (
-                    "ℹ Informações — Padrão DBF Estrito",
-                    "Como funciona o Padrão DBF Estrito:\n\n\
-                    1. Fidelidade Rígida aos Tipos do Cabeçalho:\n\
-                       • Respeita estritamente o tipo de cada campo conforme definido no cabeçalho binário do arquivo DBF original.\n\
-                       • Campos declarados como Character ('C') são gravados como Utf8 / String sem nenhuma conversão para Date, mesmo que contenham datas.\n\
-                       • Campos marcados como Date ('D') seguem como Date32.\n\
-                       • Campos numéricos ('N' e 'F') seguem como inteiros (Int32/Int64) ou ponto flutuante (Float64) de acordo com o número de casas decimais informado no DBF.",
-                ),
-                InfoModalType::AboutAuthor => (
-                    "ℹ Sobre o Aplicativo e Autoria",
-                    "Conversor de Bases da Vigilância para Parquet\n\n\
-                    • Autor: Eugênio Araújo\n\
-                    • Instituição: Centro de Inteligência Epidemiológica da SMS Rio (CIE / SVS / SMS-Rio)\n\n\
-                    Objetivos e Funcionalidades:\n\
-                    1. Conversão ultrarrápida de bases epidemiológicas legadas (DBF/dBase III e IV) para o padrão analítico Apache Parquet com compressão ZSTD.\n\
-                    2. Reconhecimento automático de sistemas pelo dicionário oficial de colunas: SIM, SINASC, SIVEP SRAG, SIVEP SG, DENGON (Dengue e Chikungunya) e SINAN NET.\n\
-                    3. Padronização automática de encoding conforme diretrizes oficiais do DATASUS e DuckDB (ISO-8859-1 / Windows-1252).\n\
-                    4. Auditoria de dados pessoais sensíveis e anonimização de acordo com a LGPD.\n\
-                    5. Descompactação direta de lotes ZIP, RAR e 7Z com eliminação automática de temporários.",
-                ),
-            };
 
-            egui::Window::new(title)
-                .collapsible(false)
-                .resizable(false)
-                .open(&mut is_open)
-                .anchor(egui::Align2::CENTER_CENTER, Vec2::new(0.0, 0.0))
-                .show(ctx, |ui| {
-                    ui.set_max_width(540.0);
-                    ui.label(content);
-                    ui.add_space(12.0);
-                    if ui.button("Fechar").clicked() {
-                        self.info_modal = None;
-                    }
-                });
+            if modal == InfoModalType::AboutAuthor {
+                egui::Window::new("ℹ Sobre o Aplicativo e Autoria")
+                    .collapsible(false)
+                    .resizable(false)
+                    .open(&mut is_open)
+                    .anchor(egui::Align2::CENTER_CENTER, Vec2::new(0.0, 0.0))
+                    .show(ctx, |ui| {
+                        ui.set_max_width(560.0);
+                        ui.horizontal(|ui| {
+                            if let Some(tex) = &self.logo_texture {
+                                ui.add(egui::Image::new(tex).max_size(Vec2::new(60.0, 69.3)));
+                            }
+                            ui.vertical(|ui| {
+                                ui.heading("DBF / DBC para Parquet");
+                                ui.label(RichText::new("Conversor Oficial de Bases Epidemiológicas do DATASUS").italics());
+                                ui.label(RichText::new("Autor: Eugênio Araújo").strong().color(Color32::from_rgb(130, 185, 255)));
+                                ui.label("Centro de Inteligência Epidemiológica da SMS Rio (CIE / SVS / SMS-Rio)");
+                                ui.hyperlink_to("🔗 Repositório no GitHub (Código Aberto)", "https://github.com/eugeniosinan/DBF-para-Parquet");
+                            });
+                        });
+                        ui.separator();
+                        ui.label(
+                            "Objetivos e Funcionalidades:\n\n\
+                            1. Conversão ultrarrápida de bases epidemiológicas legadas (DBF e DBC) para o padrão analítico Apache Parquet com compressão ZSTD.\n\
+                            2. Reconhecimento automático de schemas oficiais: SIM, SINASC, SIVEP SRAG, SIVEP SG, DENGON e SINAN NET.\n\
+                            3. Padronização automática de encoding conforme diretrizes oficiais do DATASUS e DuckDB (ISO-8859-1 / Windows-1252).\n\
+                            4. Auditoria de dados pessoais sensíveis e anonimização de acordo com a LGPD.\n\
+                            5. Descompactação direta de lotes ZIP, RAR e 7Z e descompressão transparente de arquivos DBC."
+                        );
+                        ui.add_space(10.0);
+                        if ui.button("Fechar").clicked() {
+                            self.info_modal = None;
+                        }
+                    });
+            } else {
+                let (title, content) = match modal {
+                    InfoModalType::HealthPattern => (
+                        "ℹ Informações — Padrão Saúde / DuckDB",
+                        "Como funciona o Padrão Saúde / DuckDB:\n\n\
+                        1. Conversão Inteligente de Datas:\n\
+                           • Colunas de data declaradas como texto no DBF (tipo 'C'), como DTOBITO, DTNASC, DT_NOTIFIC, DT_SIN_PRI, DT_PRISINT, etc., são convertidas no formato nativo DATE (YYYY-MM-DD) do Parquet.\n\
+                           • Extrai dígitos numéricos e reconhece tanto datas brasileiras (DDMMYYYY ou DD/MM/YYYY) quanto formato internacional (YYYYMMDD ou YYYY-MM-DD).\n\n\
+                        2. Limpeza de Campos Textuais:\n\
+                           • Todos os demais campos de texto permanecem como String UTF-8 limpa.\n\
+                           • Remove espaços excedentes nas extremidades (TRIM).\n\
+                           • Converte valores vazios, compostos apenas por espaços ou preenchidos com underscores ('_________') em NULL, evitando ruídos estatísticos.",
+                    ),
+                    InfoModalType::StrictDbf => (
+                        "ℹ Informações — Padrão DBF Estrito",
+                        "Como funciona o Padrão DBF Estrito:\n\n\
+                        1. Fidelidade Rígida aos Tipos do Cabeçalho:\n\
+                           • Respeita estritamente o tipo de cada campo conforme definido no cabeçalho binário do arquivo DBF original.\n\
+                           • Campos declarados como Character ('C') são gravados como Utf8 / String sem nenhuma conversão para Date, mesmo que contenham datas.\n\
+                           • Campos marcados como Date ('D') seguem como Date32.\n\
+                           • Campos numéricos ('N' e 'F') seguem como inteiros (Int32/Int64) ou ponto flutuante (Float64) de acordo com o número de casas decimais informado no DBF.",
+                    ),
+                    InfoModalType::AboutAuthor => unreachable!(),
+                };
+
+                egui::Window::new(title)
+                    .collapsible(false)
+                    .resizable(false)
+                    .open(&mut is_open)
+                    .anchor(egui::Align2::CENTER_CENTER, Vec2::new(0.0, 0.0))
+                    .show(ctx, |ui| {
+                        ui.set_max_width(540.0);
+                        ui.label(content);
+                        ui.add_space(12.0);
+                        if ui.button("Fechar").clicked() {
+                            self.info_modal = None;
+                        }
+                    });
+            }
 
             if !is_open {
                 self.info_modal = None;
@@ -548,8 +638,12 @@ impl eframe::App for DbfConverterApp {
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             ui.add_space(6.0);
             ui.horizontal(|ui| {
+                if let Some(tex) = &self.logo_texture {
+                    ui.add(egui::Image::new(tex).max_size(Vec2::new(38.0, 44.0)));
+                }
+
                 ui.vertical(|ui| {
-                    ui.heading(RichText::new("📊 Conversor de Bases da Vigilância para Parquet").strong().size(20.0));
+                    ui.heading(RichText::new("📊 Conversor de Bases da Vigilância para Parquet").strong().size(19.0));
                     ui.horizontal(|ui| {
                         ui.label(RichText::new("Eugênio Araújo • Centro de Inteligência Epidemiológica da SMS Rio").strong().color(Color32::from_rgb(130, 185, 255)));
                         ui.label("•");
@@ -558,8 +652,25 @@ impl eframe::App for DbfConverterApp {
                 });
 
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                    if ui.button("ℹ️ Sobre").on_hover_text("Informações sobre o autor e o sistema").clicked() {
+                    if ui.button("ℹ Sobre").on_hover_text("Informações sobre o autor e o sistema").clicked() {
                         self.info_modal = Some(InfoModalType::AboutAuthor);
+                    }
+
+                    // Seletor de Tema
+                    let prev_theme = self.theme_mode;
+                    ui.menu_button(format!("🎨 {}", self.theme_mode.display_name()), |ui| {
+                        if ui.selectable_value(&mut self.theme_mode, ThemeMode::Dark, "🌙 Escuro").clicked() {
+                            ui.close();
+                        }
+                        if ui.selectable_value(&mut self.theme_mode, ThemeMode::DatasusBlue, "🏥 Azul Saúde").clicked() {
+                            ui.close();
+                        }
+                        if ui.selectable_value(&mut self.theme_mode, ThemeMode::Light, "☀ Claro").clicked() {
+                            ui.close();
+                        }
+                    });
+                    if self.theme_mode != prev_theme {
+                        self.theme_mode.apply(ctx);
                     }
                 });
             });
@@ -630,7 +741,7 @@ impl DbfConverterApp {
                 ui.horizontal(|ui| {
                     ui.label(RichText::new("📁 PASSO 1 • Seleção dos Arquivos ou Pastas").strong().size(15.0));
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                        if ui.button("🗑️ Limpar Tudo").clicked() {
+                        if ui.button("🗑 Limpar Tudo").clicked() {
                             self.clear_inputs();
                         }
                         if ui.button("📂 Adicionar Pasta Inteira").on_hover_text("Varre recursivamente a pasta selecionada, localizando e descompactando todos os DBF e ZIP/RAR/7Z.").clicked() {
@@ -681,9 +792,9 @@ impl DbfConverterApp {
                 painter.rect_stroke(drop_rect.rect, 6.0, stroke, egui::StrokeKind::Inside);
 
                 let label_text = if self.input_paths.is_empty() {
-                    "⬇️ Arraste e solte arquivos aqui (.dbf, .dbc, .zip, .rar, .7z) ou pastas completas"
+                    "⬇ Arraste e solte arquivos aqui (.dbf, .dbc, .zip, .rar, .7z) ou pastas completas"
                 } else {
-                    "⬇️ Arraste mais arquivos ou pastas para adicionar à lista"
+                    "⬇ Arraste mais arquivos ou pastas para adicionar à lista"
                 };
                 painter.text(
                     drop_rect.rect.center(),
@@ -770,7 +881,7 @@ impl DbfConverterApp {
             // PASSO 3: MODO DE CONVERSÃO E DESTINO
             // ==========================================
             ui.group(|ui| {
-                ui.label(RichText::new("⚙️ PASSO 3 • Opções e Destino de Conversão").strong().size(15.0));
+                ui.label(RichText::new("⚙ PASSO 3 • Opções e Destino de Conversão").strong().size(15.0));
                 ui.separator();
 
                 ui.horizontal(|ui| {
@@ -932,7 +1043,7 @@ impl DbfConverterApp {
                 if !report.invalid_archives_without_dbf.is_empty() {
                     ui.group(|ui| {
                         ui.label(
-                            RichText::new("⚠️ Arquivos Compactados Sem Base DBF Detectada:")
+                            RichText::new("⚠ Arquivos Compactados Sem Base DBF Detectada:")
                                 .color(Color32::from_rgb(255, 160, 50))
                                 .strong(),
                         );
@@ -1052,7 +1163,7 @@ impl DbfConverterApp {
 
                 if !rep.ignored_archives_without_dbf.is_empty() {
                     ui.group(|ui| {
-                        ui.label(RichText::new("⚠️ Arquivos compactados sem DBF que foram ignorados:").color(Color32::from_rgb(240, 160, 50)));
+                        ui.label(RichText::new("⚠ Arquivos compactados sem DBF que foram ignorados:").color(Color32::from_rgb(240, 160, 50)));
                         for f in &rep.ignored_archives_without_dbf {
                             ui.label(format!("• {}", f));
                         }

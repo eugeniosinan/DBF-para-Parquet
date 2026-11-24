@@ -925,6 +925,7 @@ dependencies = [
  "eframe",
  "egui",
  "encoding_rs",
+ "image",
  "parquet",
  "regex",
  "rfd",

@@ -131,7 +131,7 @@ fn run_cli(args: &[String], inspect_only: bool) {
                             custom_encoding = None;
                         }
                         other => {
-                            eprintln!("⚠️ Encoding desconhecido '{}'. Usando detecção automática padronizada.", other);
+                            eprintln!("⚠ Encoding desconhecido '{}'. Usando detecção automática padronizada.", other);
                         }
                     }
                 }
@@ -165,7 +165,7 @@ fn run_cli(args: &[String], inspect_only: bool) {
     let mut files_to_scan = Vec::new();
     for input_path in &inputs {
         if !input_path.exists() {
-            eprintln!("⚠️ Caminho de entrada não encontrado: {:?}", input_path);
+            eprintln!("⚠ Caminho de entrada não encontrado: {:?}", input_path);
             continue;
         }
 
@@ -222,7 +222,7 @@ fn run_cli(args: &[String], inspect_only: bool) {
                     internal_files_sample,
                 } => {
                     eprintln!(
-                        "⚠️ ALERTA: O arquivo '{}' NÃO contém nenhum arquivo .dbf interno!",
+                        "⚠ ALERTA: O arquivo '{}' NÃO contém nenhum arquivo .dbf interno!",
                         archive_name
                     );
                     eprintln!("Arquivos encontrados dentro: {:?}", internal_files_sample);
@@ -295,10 +295,10 @@ fn run_cli(args: &[String], inspect_only: bool) {
     }
 
     let mode = if strict {
-        println!("\n⚙️ Modo de Conversão: DBF Estrito (respeitando tipos literais do cabeçalho)");
+        println!("\n⚙ Modo de Conversão: DBF Estrito (respeitando tipos literais do cabeçalho)");
         ConversionMode::StrictDbfTypes
     } else {
-        println!("\n⚙️ Modo de Conversão: Padrão Epidemiológico Saúde (datas convertidas para Date32)");
+        println!("\n⚙ Modo de Conversão: Padrão Epidemiológico Saúde (datas convertidas para Date32)");
         ConversionMode::EpidemiologicalDates
     };
 
