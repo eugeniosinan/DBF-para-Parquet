@@ -1,14 +1,14 @@
 <p align="center">
-  <img src="docs/banner.png" alt="Conversor DBF para Parquet — Banner Oficial" width="100%" style="border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.25);" />
+  <img src="docs/banner.png" alt="Conversor DBF/DBC para Parquet — Banner Oficial" width="100%" style="border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.25);" />
 </p>
 
 <p align="center">
   <a href="docs/hex_sticker_hd.png" title="Clique para ampliar o Selo Hexagonal Oficial">
-    <img src="docs/hex_sticker.png" alt="Selo Hexagonal Oficial - DBF para Parquet" width="160px" align="right" style="margin-left: 20px; margin-bottom: 20px;" />
+    <img src="docs/hex_sticker.png" alt="Selo Hexagonal Oficial - DBF/DBC para Parquet" width="160px" align="right" style="margin-left: 20px; margin-bottom: 20px;" />
   </a>
 </p>
 
-# Conversor de Bases da Vigilância para Parquet
+# Conversor de Bases da Vigilância — DBF / DBC para Parquet
 
 <p align="left">
   <img src="https://img.shields.io/badge/Rust-1.80+-orange.svg?style=for-the-badge&logo=rust" alt="Rust" />
