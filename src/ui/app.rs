@@ -640,9 +640,30 @@ impl DbfConverterApp {
                         }
                         if ui.button("📄 Adicionar Arquivos...").clicked() {
                             if let Some(files) = rfd::FileDialog::new()
-                                .add_filter("Bases e Compactados", &["dbf", "dbc", "zip", "7z", "rar"])
-                                .add_filter("DBF / DBC (DATASUS)", &["dbf", "dbc"])
-                                .add_filter("Compactados", &["zip", "7z", "rar", "dbc"])
+                                .add_filter(
+                                    "Bases e Compactados (*.dbf, *.dbc, *.zip, *.7z, *.rar)",
+                                    &[
+                                        "dbf", "DBF", "Dbf",
+                                        "dbc", "DBC", "Dbc",
+                                        "zip", "ZIP", "Zip",
+                                        "7z", "7Z",
+                                        "rar", "RAR", "Rar",
+                                    ],
+                                )
+                                .add_filter(
+                                    "DBF / DBC (DATASUS) (*.dbf, *.dbc)",
+                                    &["dbf", "DBF", "Dbf", "dbc", "DBC", "Dbc"],
+                                )
+                                .add_filter(
+                                    "Compactados (*.zip, *.7z, *.rar, *.dbc)",
+                                    &[
+                                        "zip", "ZIP", "Zip",
+                                        "7z", "7Z",
+                                        "rar", "RAR", "Rar",
+                                        "dbc", "DBC", "Dbc",
+                                    ],
+                                )
+                                .add_filter("Todos os Arquivos (*.*)", &["*"])
                                 .pick_files()
                             {
                                 self.add_paths(files);
