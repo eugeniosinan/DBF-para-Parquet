@@ -158,12 +158,31 @@ Gera o arquivo `.parquet` colunar com compressão ZSTD e tipagem automática:
 # No Windows:
 dbf-para-parquet-windows.exe --cli "DORJ2025.dbc" "DORJ2025.parquet"
 
+# Consolidar múltiplos anos em um único Parquet (--merge):
+./dbf-para-parquet-linux --cli DORJ2020.dbc DORJ2021.dbc DORJ2022.dbc --merge -o "DO_RJ_Serie.parquet"
+
+# Converter todos os arquivos de uma pasta para outro diretório (--out-dir):
+./dbf-para-parquet-linux --cli /dados/sivep/ --out-dir /dados/parquet/
+
 # Forçar encoding específico (se necessário):
-./dbf-para-parquet-linux --cli "entrada.dbf" "saida.parquet" --encoding CP850
+./dbf-para-parquet-linux --cli "entrada.dbf" -o "saida.parquet" --encoding CP850
 
 # Usar modo DBF estrito em vez do Padrão Saúde de datas:
-./dbf-para-parquet-linux --cli "entrada.dbf" "saida.parquet" --strict
+./dbf-para-parquet-linux --cli "entrada.dbf" -o "saida.parquet" --strict
 ```
+
+#### Tabela Completa de Paridade: Interface Gráfica vs Linha de Comando (CLI)
+
+| Funcionalidade na Interface Gráfica | Equivalente na Linha de Comando (CLI) | Descrição |
+| :--- | :--- | :--- |
+| **Arrastar Arquivos ou Pastas** | Passar arquivos ou diretórios como argumentos | Aceita caminhos de arquivos (`.dbf`, `.dbc`, `.zip`, `.rar`, `.7z`) ou pastas inteiras |
+| **Modo de Saída: Individual** | Padrão (ou `--out-dir <PASTA>`) | Gera um arquivo Parquet individual para cada DBF/DBC |
+| **Modo de Saída: Unificado (Merge)** | `-m`, `--merge -o <ARQUIVO.parquet>` | Concatena/consolida múltiplos arquivos em uma única tabela Parquet |
+| **Padrão Saúde de Datas (Date32)** | Padrão ativado | Converte strings DDMMAAAA / YYYYMMDD em datas nativas otimizadas para DuckDB/Polars |
+| **Modo DBF Estrito** | `--strict` | Respeita estritamente os tipos de cabeçalho do arquivo DBF original |
+| **Encoding Automático / Manual** | `--encoding <auto\|iso-8859-1\|cp850\|utf-8>` | Detecta conforme o agravo ou força uma codificação específica |
+| **Aba Pré-Processamento / Auditoria LGPD** | `--inspect <ARQUIVO>` | Realiza o diagnóstico completo, contagem de linhas e auditoria LGPD sem converter |
+| **Ajuda Integrada** | `-h`, `--help` | Exibe a documentação de uso e exemplos diretamente no terminal |
 
 > [!TIP]
 > **Atenção aos caminhos com espaços**: Se a pasta ou o arquivo tiver espaços (como `"/home/usuario/Bases de Exemplo/arquivo.zip"`), **sempre envolva o caminho entre aspas duplas `"..."`**.
