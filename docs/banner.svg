@@ -28,10 +28,10 @@
   </defs>
 
   <style>
-    .eyebrow { font-family: 'Inter', system-ui, sans-serif; font-size: 13px; font-weight: 700; fill: #38bdf8; letter-spacing: 2px; }
-    .main-title { font-family: 'Inter', system-ui, sans-serif; font-size: 46px; font-weight: 900; fill: #ffffff; letter-spacing: -0.5px; }
-    .tagline { font-family: 'Inter', system-ui, sans-serif; font-size: 17px; font-weight: 400; fill: #94a3b8; }
-    .pill-label { font-family: 'Inter', system-ui, sans-serif; font-size: 12px; font-weight: 700; }
+    .eyebrow { font-family: 'Inter', system-ui, -apple-system, sans-serif; font-size: 11.5px; font-weight: 700; fill: #38bdf8; letter-spacing: 1.5px; }
+    .main-title { font-family: 'Inter', system-ui, -apple-system, sans-serif; font-size: 44px; font-weight: 900; fill: #ffffff; letter-spacing: -0.5px; }
+    .tagline { font-family: 'Inter', system-ui, -apple-system, sans-serif; font-size: 16px; font-weight: 400; fill: #94a3b8; }
+    .pill-label { font-family: 'Inter', system-ui, -apple-system, sans-serif; font-size: 11.5px; font-weight: 700; }
     .tech-pill { font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 11px; font-weight: 700; fill: #e2e8f0; }
   </style>
 
@@ -40,11 +40,11 @@
   <rect width="1280" height="420" fill="url(#hexPattern)" />
 
   <!-- Subtle Radial Glow in background -->
-  <circle cx="220" cy="210" r="260" fill="#0284c7" opacity="0.12" filter="url(#bannerGlow)" />
+  <circle cx="210" cy="210" r="260" fill="#0284c7" opacity="0.12" filter="url(#bannerGlow)" />
   <circle cx="900" cy="150" r="320" fill="#3b82f6" opacity="0.08" filter="url(#bannerGlow)" />
 
   <!-- LEFT: Hex Sticker Representation (Scaled & Centered) -->
-  <g transform="translate(80, 45) scale(0.48)">
+  <g transform="translate(70, 45) scale(0.48)">
     <!-- Embedded Hexagon Sticker (exact geometry) -->
     <polygon points="300,14 580,175.7 580,517.3 300,679 20,517.3 20,175.7"
              fill="#0b162c" stroke="url(#accentGrad)" stroke-width="18" stroke-linejoin="round" filter="url(#bannerGlow)" />
@@ -90,76 +90,76 @@
   </g>
 
   <!-- RIGHT: Main Content -->
-  <g transform="translate(430, 75)">
-    <!-- Top Eyebrow Tag -->
+  <g transform="translate(390, 75)">
+    <!-- Top Eyebrow Tag: widened to 485px with ample padding so text never touches or cuts the border -->
     <g transform="translate(0, 0)">
-      <rect x="0" y="-18" width="430" height="28" rx="14" fill="#0f2238" stroke="#0284c7" stroke-width="1.5" />
-      <circle cx="16" cy="-4" r="4" fill="#38bdf8" />
-      <text x="28" y="0" class="eyebrow">SMS RIO • CENTRO DE INTELIGÊNCIA EPIDEMIOLÓGICA</text>
+      <rect x="0" y="-18" width="485" height="28" rx="14" fill="#0f2238" stroke="#0284c7" stroke-width="1.5" />
+      <circle cx="16" cy="-4" r="4.5" fill="#38bdf8" />
+      <text x="30" y="0.5" class="eyebrow">SMS RIO • CENTRO DE INTELIGÊNCIA EPIDEMIOLÓGICA</text>
     </g>
 
     <!-- Main Title -->
     <text x="0" y="55" class="main-title">DBF <tspan fill="#38bdf8">para</tspan> Parquet</text>
 
-    <!-- Subtitle -->
-    <text x="0" y="95" class="tagline">Conversor de Alta Performance para Bases de Vigilância em Saúde</text>
-    <text x="0" y="122" class="tagline" fill="#64748b" font-size="14">Migração ultrarrápida do dBase III/IV e DATASUS (.dbc) para Apache Parquet colunar otimizado com ZSTD</text>
+    <!-- Subtitles with clean margins -->
+    <text x="0" y="94" class="tagline">Conversor de Alta Performance para Bases de Vigilância em Saúde</text>
+    <text x="0" y="120" class="tagline" fill="#64748b" font-size="13.5">Migração ultrarrápida do dBase III/IV e DATASUS (.dbc) para Apache Parquet colunar (ZSTD)</text>
 
     <!-- Supported Systems Row -->
     <g transform="translate(0, 160)">
       <!-- SIM -->
       <g transform="translate(0, 0)">
-        <rect x="0" y="-14" width="62" height="26" rx="6" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5" />
-        <text x="31" y="3" text-anchor="middle" class="pill-label" fill="#38bdf8">SIM</text>
+        <rect x="0" y="-14" width="58" height="26" rx="6" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5" />
+        <text x="29" y="3" text-anchor="middle" class="pill-label" fill="#38bdf8">SIM</text>
       </g>
       <!-- SINASC -->
-      <g transform="translate(72, 0)">
-        <rect x="0" y="-14" width="80" height="26" rx="6" fill="#1e293b" stroke="#ec4899" stroke-width="1.5" />
-        <text x="40" y="3" text-anchor="middle" class="pill-label" fill="#ec4899">SINASC</text>
+      <g transform="translate(68, 0)">
+        <rect x="0" y="-14" width="76" height="26" rx="6" fill="#1e293b" stroke="#ec4899" stroke-width="1.5" />
+        <text x="38" y="3" text-anchor="middle" class="pill-label" fill="#ec4899">SINASC</text>
       </g>
       <!-- SIVEP SRAG -->
-      <g transform="translate(162, 0)">
-        <rect x="0" y="-14" width="105" height="26" rx="6" fill="#1e293b" stroke="#22c55e" stroke-width="1.5" />
-        <text x="52.5" y="3" text-anchor="middle" class="pill-label" fill="#22c55e">SIVEP SRAG</text>
+      <g transform="translate(154, 0)">
+        <rect x="0" y="-14" width="100" height="26" rx="6" fill="#1e293b" stroke="#22c55e" stroke-width="1.5" />
+        <text x="50" y="3" text-anchor="middle" class="pill-label" fill="#22c55e">SIVEP SRAG</text>
       </g>
       <!-- SIVEP SG -->
-      <g transform="translate(277, 0)">
-        <rect x="0" y="-14" width="90" height="26" rx="6" fill="#1e293b" stroke="#10b981" stroke-width="1.5" />
-        <text x="45" y="3" text-anchor="middle" class="pill-label" fill="#10b981">SIVEP SG</text>
+      <g transform="translate(264, 0)">
+        <rect x="0" y="-14" width="86" height="26" rx="6" fill="#1e293b" stroke="#10b981" stroke-width="1.5" />
+        <text x="43" y="3" text-anchor="middle" class="pill-label" fill="#10b981">SIVEP SG</text>
       </g>
       <!-- DENGON -->
-      <g transform="translate(377, 0)">
-        <rect x="0" y="-14" width="85" height="26" rx="6" fill="#1e293b" stroke="#eab308" stroke-width="1.5" />
-        <text x="42.5" y="3" text-anchor="middle" class="pill-label" fill="#eab308">DENGON</text>
+      <g transform="translate(360, 0)">
+        <rect x="0" y="-14" width="80" height="26" rx="6" fill="#1e293b" stroke="#eab308" stroke-width="1.5" />
+        <text x="40" y="3" text-anchor="middle" class="pill-label" fill="#eab308">DENGON</text>
       </g>
       <!-- SINAN NET -->
-      <g transform="translate(472, 0)">
-        <rect x="0" y="-14" width="100" height="26" rx="6" fill="#1e293b" stroke="#a855f7" stroke-width="1.5" />
-        <text x="50" y="3" text-anchor="middle" class="pill-label" fill="#a855f7">SINAN NET</text>
+      <g transform="translate(450, 0)">
+        <rect x="0" y="-14" width="96" height="26" rx="6" fill="#1e293b" stroke="#a855f7" stroke-width="1.5" />
+        <text x="48" y="3" text-anchor="middle" class="pill-label" fill="#a855f7">SINAN NET</text>
       </g>
       <!-- DBC DATASUS -->
-      <g transform="translate(582, 0)">
-        <rect x="0" y="-14" width="125" height="26" rx="6" fill="#1e293b" stroke="#f97316" stroke-width="1.5" />
-        <text x="62.5" y="3" text-anchor="middle" class="pill-label" fill="#f97316">DBC DATASUS</text>
+      <g transform="translate(556, 0)">
+        <rect x="0" y="-14" width="120" height="26" rx="6" fill="#1e293b" stroke="#f97316" stroke-width="1.5" />
+        <text x="60" y="3" text-anchor="middle" class="pill-label" fill="#f97316">DBC DATASUS</text>
       </g>
     </g>
 
     <!-- Bottom Feature Pills -->
     <g transform="translate(0, 215)">
-      <rect x="0" y="-12" width="120" height="24" rx="12" fill="#1e293b" />
-      <text x="60" y="4" text-anchor="middle" class="tech-pill">🦀 Rust 1.80+</text>
+      <rect x="0" y="-12" width="115" height="24" rx="12" fill="#1e293b" />
+      <text x="57.5" y="4" text-anchor="middle" class="tech-pill">🦀 Rust 1.80+</text>
 
-      <rect x="130" y="-12" width="150" height="24" rx="12" fill="#1e293b" />
-      <text x="205" y="4" text-anchor="middle" class="tech-pill">📦 Parquet ZSTD</text>
+      <rect x="125" y="-12" width="140" height="24" rx="12" fill="#1e293b" />
+      <text x="195" y="4" text-anchor="middle" class="tech-pill">📦 Parquet ZSTD</text>
 
-      <rect x="290" y="-12" width="160" height="24" rx="12" fill="#1e293b" />
-      <text x="370" y="4" text-anchor="middle" class="tech-pill">🦆 DuckDB Nativo</text>
+      <rect x="275" y="-12" width="155" height="24" rx="12" fill="#1e293b" />
+      <text x="352.5" y="4" text-anchor="middle" class="tech-pill">🦆 DuckDB Nativo</text>
 
-      <rect x="460" y="-12" width="160" height="24" rx="12" fill="#1e293b" />
-      <text x="540" y="4" text-anchor="middle" class="tech-pill">🪟 Win &amp; 🐧 Linux</text>
+      <rect x="440" y="-12" width="155" height="24" rx="12" fill="#1e293b" />
+      <text x="517.5" y="4" text-anchor="middle" class="tech-pill">🪟 Win &amp; 🐧 Linux</text>
 
-      <rect x="630" y="-12" width="150" height="24" rx="12" fill="#1e293b" />
-      <text x="705" y="4" text-anchor="middle" class="tech-pill">🔒 Auditoria LGPD</text>
+      <rect x="605" y="-12" width="145" height="24" rx="12" fill="#1e293b" />
+      <text x="677.5" y="4" text-anchor="middle" class="tech-pill">🔒 Auditoria LGPD</text>
     </g>
   </g>
 
