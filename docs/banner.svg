@@ -1,0 +1,168 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 420" width="1280" height="420">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bannerBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#080e1a" />
+      <stop offset="40%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#0a1122" />
+    </linearGradient>
+
+    <!-- Accent Line Gradient -->
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="50%" stop-color="#3b82f6" />
+      <stop offset="100%" stop-color="#f59e0b" />
+    </linearGradient>
+
+    <!-- Glow Filter -->
+    <filter id="bannerGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+
+    <!-- Hexagon Pattern -->
+    <pattern id="hexPattern" width="40" height="69.282" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 20 11.547 L 0 0 L 0 23.094 L 20 34.641 L 40 23.094 Z M 0 34.641 L 20 45.188 L 40 34.641 L 40 57.735 L 20 69.282 L 0 57.735 Z" 
+            fill="none" stroke="#1e293b" stroke-width="1" stroke-opacity="0.4" />
+    </pattern>
+  </defs>
+
+  <style>
+    .eyebrow { font-family: 'Inter', system-ui, sans-serif; font-size: 13px; font-weight: 700; fill: #38bdf8; letter-spacing: 2px; }
+    .main-title { font-family: 'Inter', system-ui, sans-serif; font-size: 46px; font-weight: 900; fill: #ffffff; letter-spacing: -0.5px; }
+    .tagline { font-family: 'Inter', system-ui, sans-serif; font-size: 17px; font-weight: 400; fill: #94a3b8; }
+    .pill-label { font-family: 'Inter', system-ui, sans-serif; font-size: 12px; font-weight: 700; }
+    .tech-pill { font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 11px; font-weight: 700; fill: #e2e8f0; }
+  </style>
+
+  <!-- Background Layer -->
+  <rect width="1280" height="420" fill="url(#bannerBg)" />
+  <rect width="1280" height="420" fill="url(#hexPattern)" />
+
+  <!-- Subtle Radial Glow in background -->
+  <circle cx="220" cy="210" r="260" fill="#0284c7" opacity="0.12" filter="url(#bannerGlow)" />
+  <circle cx="900" cy="150" r="320" fill="#3b82f6" opacity="0.08" filter="url(#bannerGlow)" />
+
+  <!-- LEFT: Hex Sticker Representation (Scaled & Centered) -->
+  <g transform="translate(80, 45) scale(0.48)">
+    <!-- Embedded Hexagon Sticker (exact geometry) -->
+    <polygon points="300,14 580,175.7 580,517.3 300,679 20,517.3 20,175.7"
+             fill="#0b162c" stroke="url(#accentGrad)" stroke-width="18" stroke-linejoin="round" filter="url(#bannerGlow)" />
+    <polygon points="300,14 580,175.7 580,517.3 300,679 20,517.3 20,175.7"
+             fill="#0b162c" stroke="url(#accentGrad)" stroke-width="16" stroke-linejoin="round" />
+    <polygon points="300,32 562,183 562,510 300,661 38,510 38,183"
+             fill="none" stroke="#1e3a5f" stroke-width="3" stroke-opacity="0.7" />
+
+    <!-- Top Badge in Hex -->
+    <rect x="200" y="80" width="200" height="30" rx="15" fill="#1e293b" stroke="#334155" stroke-width="2" />
+    <circle cx="220" cy="95" r="5" fill="#22c55e" />
+    <text x="308" y="101" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#38bdf8">CIE • SMS RIO</text>
+
+    <!-- Art inside Hex -->
+    <g transform="translate(300, 260)">
+      <!-- DBF box -->
+      <g transform="translate(-115, 0)">
+        <rect x="-45" y="-50" width="90" height="100" rx="10" fill="#1e293b" stroke="#64748b" stroke-width="3" />
+        <rect x="-35" y="-38" width="70" height="8" rx="3" fill="#475569" />
+        <rect x="-35" y="-22" width="70" height="8" rx="3" fill="#475569" />
+        <rect x="-35" y="-6" width="70" height="8" rx="3" fill="#475569" />
+        <rect x="-35" y="10" width="70" height="8" rx="3" fill="#475569" />
+        <rect x="-35" y="26" width="40" height="8" rx="3" fill="#f59e0b" />
+        <text x="0" y="-60" text-anchor="middle" font-family="monospace" font-size="14" font-weight="bold" fill="#f59e0b">.DBF</text>
+      </g>
+      <!-- Pulse Arrow -->
+      <path d="M -55 0 L -25 0 Q -15 0 -10 -25 L -5 30 L 5 -35 L 12 18 L 18 0 L 45 0"
+            fill="none" stroke="#f43f5e" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+      <polygon points="45,-10 60,0 45,10" fill="#38bdf8" />
+      <!-- Parquet box -->
+      <g transform="translate(115, 0)">
+        <rect x="-32" y="-45" width="18" height="90" rx="5" fill="#0284c7" />
+        <rect x="-8" y="-45" width="18" height="90" rx="5" fill="#38bdf8" />
+        <rect x="16" y="-45" width="18" height="90" rx="5" fill="#0284c7" />
+        <text x="0" y="-60" text-anchor="middle" font-family="monospace" font-size="14" font-weight="bold" fill="#38bdf8">.PARQUET</text>
+      </g>
+    </g>
+
+    <text x="300" y="480" text-anchor="middle" font-family="sans-serif" font-size="38" font-weight="900" fill="#ffffff">DBF <tspan fill="#38bdf8">➔</tspan> PARQUET</text>
+    <text x="300" y="515" text-anchor="middle" font-family="sans-serif" font-size="16" font-weight="bold" fill="#38bdf8" letter-spacing="3">VIGILÂNCIA EM SAÚDE</text>
+    <rect x="170" y="565" width="260" height="30" rx="15" fill="#1e293b" stroke="#334155" stroke-width="1.5" />
+    <text x="300" y="585" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="600" fill="#94a3b8">RUST • ZSTD • DUCKDB</text>
+  </g>
+
+  <!-- RIGHT: Main Content -->
+  <g transform="translate(430, 75)">
+    <!-- Top Eyebrow Tag -->
+    <g transform="translate(0, 0)">
+      <rect x="0" y="-18" width="430" height="28" rx="14" fill="#0f2238" stroke="#0284c7" stroke-width="1.5" />
+      <circle cx="16" cy="-4" r="4" fill="#38bdf8" />
+      <text x="28" y="0" class="eyebrow">SMS RIO • CENTRO DE INTELIGÊNCIA EPIDEMIOLÓGICA</text>
+    </g>
+
+    <!-- Main Title -->
+    <text x="0" y="55" class="main-title">DBF <tspan fill="#38bdf8">para</tspan> Parquet</text>
+
+    <!-- Subtitle -->
+    <text x="0" y="95" class="tagline">Conversor de Alta Performance para Bases de Vigilância em Saúde</text>
+    <text x="0" y="122" class="tagline" fill="#64748b" font-size="14">Migração ultrarrápida do dBase III/IV e DATASUS (.dbc) para Apache Parquet colunar otimizado com ZSTD</text>
+
+    <!-- Supported Systems Row -->
+    <g transform="translate(0, 160)">
+      <!-- SIM -->
+      <g transform="translate(0, 0)">
+        <rect x="0" y="-14" width="62" height="26" rx="6" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5" />
+        <text x="31" y="3" text-anchor="middle" class="pill-label" fill="#38bdf8">SIM</text>
+      </g>
+      <!-- SINASC -->
+      <g transform="translate(72, 0)">
+        <rect x="0" y="-14" width="80" height="26" rx="6" fill="#1e293b" stroke="#ec4899" stroke-width="1.5" />
+        <text x="40" y="3" text-anchor="middle" class="pill-label" fill="#ec4899">SINASC</text>
+      </g>
+      <!-- SIVEP SRAG -->
+      <g transform="translate(162, 0)">
+        <rect x="0" y="-14" width="105" height="26" rx="6" fill="#1e293b" stroke="#22c55e" stroke-width="1.5" />
+        <text x="52.5" y="3" text-anchor="middle" class="pill-label" fill="#22c55e">SIVEP SRAG</text>
+      </g>
+      <!-- SIVEP SG -->
+      <g transform="translate(277, 0)">
+        <rect x="0" y="-14" width="90" height="26" rx="6" fill="#1e293b" stroke="#10b981" stroke-width="1.5" />
+        <text x="45" y="3" text-anchor="middle" class="pill-label" fill="#10b981">SIVEP SG</text>
+      </g>
+      <!-- DENGON -->
+      <g transform="translate(377, 0)">
+        <rect x="0" y="-14" width="85" height="26" rx="6" fill="#1e293b" stroke="#eab308" stroke-width="1.5" />
+        <text x="42.5" y="3" text-anchor="middle" class="pill-label" fill="#eab308">DENGON</text>
+      </g>
+      <!-- SINAN NET -->
+      <g transform="translate(472, 0)">
+        <rect x="0" y="-14" width="100" height="26" rx="6" fill="#1e293b" stroke="#a855f7" stroke-width="1.5" />
+        <text x="50" y="3" text-anchor="middle" class="pill-label" fill="#a855f7">SINAN NET</text>
+      </g>
+      <!-- DBC DATASUS -->
+      <g transform="translate(582, 0)">
+        <rect x="0" y="-14" width="125" height="26" rx="6" fill="#1e293b" stroke="#f97316" stroke-width="1.5" />
+        <text x="62.5" y="3" text-anchor="middle" class="pill-label" fill="#f97316">DBC DATASUS</text>
+      </g>
+    </g>
+
+    <!-- Bottom Feature Pills -->
+    <g transform="translate(0, 215)">
+      <rect x="0" y="-12" width="120" height="24" rx="12" fill="#1e293b" />
+      <text x="60" y="4" text-anchor="middle" class="tech-pill">🦀 Rust 1.80+</text>
+
+      <rect x="130" y="-12" width="150" height="24" rx="12" fill="#1e293b" />
+      <text x="205" y="4" text-anchor="middle" class="tech-pill">📦 Parquet ZSTD</text>
+
+      <rect x="290" y="-12" width="160" height="24" rx="12" fill="#1e293b" />
+      <text x="370" y="4" text-anchor="middle" class="tech-pill">🦆 DuckDB Nativo</text>
+
+      <rect x="460" y="-12" width="160" height="24" rx="12" fill="#1e293b" />
+      <text x="540" y="4" text-anchor="middle" class="tech-pill">🪟 Win &amp; 🐧 Linux</text>
+
+      <rect x="630" y="-12" width="150" height="24" rx="12" fill="#1e293b" />
+      <text x="705" y="4" text-anchor="middle" class="tech-pill">🔒 Auditoria LGPD</text>
+    </g>
+  </g>
+
+  <!-- Bottom Accent Gradient Line -->
+  <rect x="0" y="414" width="1280" height="6" fill="url(#accentGrad)" />
+</svg>

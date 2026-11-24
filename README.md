@@ -1,15 +1,26 @@
-# Conversor de Bases da Vigilância para Parquet
+<p align="center">
+  <img src="docs/banner.png" alt="Conversor DBF para Parquet — Banner Oficial" width="100%" style="border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.25);" />
+</p>
 
 <p align="center">
+  <a href="docs/hex_sticker_hd.png" title="Clique para ampliar o Selo Hexagonal Oficial">
+    <img src="docs/hex_sticker.png" alt="Selo Hexagonal Oficial - DBF para Parquet" width="160px" align="right" style="margin-left: 20px; margin-bottom: 20px;" />
+  </a>
+</p>
+
+# Conversor de Bases da Vigilância para Parquet
+
+<p align="left">
   <img src="https://img.shields.io/badge/Rust-1.80+-orange.svg?style=for-the-badge&logo=rust" alt="Rust" />
   <img src="https://img.shields.io/badge/Apache_Parquet-ZSTD-blue.svg?style=for-the-badge&logo=apache" alt="Apache Parquet" />
   <img src="https://img.shields.io/badge/Plataforma-Linux%20%7C%20Windows-green.svg?style=for-the-badge" alt="Linux & Windows" />
   <img src="https://img.shields.io/badge/Vigilância_em_Saúde-SMS--Rio-red.svg?style=for-the-badge" alt="SMS Rio" />
   <img src="https://img.shields.io/badge/Versão-1.0.0-purple.svg?style=for-the-badge" alt="v1.0.0" />
+  <a href="docs/hex_sticker_hd.png"><img src="https://img.shields.io/badge/Hex_Sticker-Disponível-informational.svg?style=for-the-badge&logo=r" alt="Hex Sticker" /></a>
 </p>
 
 > **Autor**: Eugênio Araújo — Centro de Inteligência Epidemiológica da SMS Rio (CIE / SVS / SMS-Rio)  
-> Aplicativo nativo em **Rust** de ultra-alta performance com interface gráfica moderna e intuitiva para conversão de bases de dados epidemiológicas legadas (arquivos `.dbf` dBase III/IV e pacotes compactados `.zip`, `.rar`, `.7z`) para o formato colunar otimizado **Apache Parquet** com compressão **ZSTD**.
+> Aplicativo nativo em **Rust** de ultra-alta performance com interface gráfica moderna e intuitiva para conversão de bases de dados epidemiológicas legadas (arquivos `.dbf` dBase III/IV, `.dbc` DATASUS e pacotes compactados `.zip`, `.rar`, `.7z`) para o formato colunar otimizado **Apache Parquet** com compressão **ZSTD**.
 
 ---
 
@@ -21,6 +32,10 @@
 
 - 🎥 **Vídeo de Demonstração em Alta Resolução**: [docs/demonstracao.mp4](docs/demonstracao.mp4) (H.264 720p)
 - 📖 **Roteiro Completo para Gravação e Apresentação (Cenas 00:00 - 05:00)**: [docs/ROTEIRO_TUTORIAL_VIDEO.md](docs/ROTEIRO_TUTORIAL_VIDEO.md)
+- 🏷️ **Selo Hexagonal Oficial (Hex Sticker estilo pacotes R)**:
+  - Imagem PNG em Alta Resolução (1200x1386): [docs/hex_sticker_hd.png](docs/hex_sticker_hd.png)
+  - Gráfico Vetorial Escalável (SVG): [docs/hex_sticker.svg](docs/hex_sticker.svg)
+- 🖼️ **Banner Oficial do Repositório (1280x420)**: [docs/banner.png](docs/banner.png) | [docs/banner_hd.png](docs/banner_hd.png)
 
 ---
 
