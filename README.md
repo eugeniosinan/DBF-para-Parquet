@@ -137,19 +137,57 @@ Não é necessário instalar nada! O aplicativo é um executável nativo único 
 
 O aplicativo inclui modo terminal completo para integração com pipelines de dados (Airflow, Cron, rotinas agendadas, scripts Bash ou PowerShell):
 
-### Sintaxe Básica
+### 💡 Exemplos Rápidos de 1 Linha (Copie e Cole)
+
+#### 1. Inspecionar e Diagnosticar um Arquivo (sem converter):
+Exibe o sistema identificado (SIM, SINASC, SIVEP, etc.), total de linhas, percentual de correspondência do schema, colunas de data, encoding e auditoria LGPD:
 ```bash
-# Inspecionar e diagnosticar arquivo (DBF, DBC ou pacote compactado ZIP/RAR/7Z):
-dbf-para-parquet --inspect DORJ2025.dbc
+# No Linux:
+./dbf-para-parquet-linux --inspect "DORJ2025.dbc"
 
-# Converter arquivo avulso diretamente:
-dbf-para-parquet --cli DORJ2025.dbc DORJ2025.parquet
+# No Windows (Prompt de Comando ou PowerShell):
+dbf-para-parquet-windows.exe --inspect "DORJ2025.dbc"
+```
 
-# Forçar encoding específico (ex: CP850):
-dbf-para-parquet --cli entrada.dbf saida.parquet --encoding CP850
+#### 2. Converter um Arquivo Avulso (DBF, DBC, ZIP, RAR ou 7Z):
+Gera o arquivo `.parquet` colunar com compressão ZSTD e tipagem automática:
+```bash
+# No Linux:
+./dbf-para-parquet-linux --cli "DORJ2025.dbc" "DORJ2025.parquet"
 
-# Usar modo DBF estrito em vez do Padrão Saúde:
-dbf-para-parquet --cli entrada.dbf saida.parquet --strict
+# No Windows:
+dbf-para-parquet-windows.exe --cli "DORJ2025.dbc" "DORJ2025.parquet"
+
+# Forçar encoding específico (se necessário):
+./dbf-para-parquet-linux --cli "entrada.dbf" "saida.parquet" --encoding CP850
+
+# Usar modo DBF estrito em vez do Padrão Saúde de datas:
+./dbf-para-parquet-linux --cli "entrada.dbf" "saida.parquet" --strict
+```
+
+> [!TIP]
+> **Atenção aos caminhos com espaços**: Se a pasta ou o arquivo tiver espaços (como `"/home/usuario/Bases de Exemplo/arquivo.zip"`), **sempre envolva o caminho entre aspas duplas `"..."`**.
+
+---
+
+### 🔧 Como Usar o Comando Diretamente como `dbf-para-parquet` (Sem `./` no Linux)
+
+No Linux, você pode instalar o comando no seu diretório de binários para poder digitar apenas `dbf-para-parquet` de qualquer pasta do terminal:
+
+```bash
+# Para o seu usuário local (não precisa de senha de administrador/sudo):
+mkdir -p ~/.local/bin
+cp dist/dbf-para-parquet-linux ~/.local/bin/dbf-para-parquet
+chmod +x ~/.local/bin/dbf-para-parquet
+
+# Ou para todos os usuários do sistema:
+sudo cp dist/dbf-para-parquet-linux /usr/local/bin/dbf-para-parquet
+```
+
+Feito isso, você poderá rodar simplesmente:
+```bash
+dbf-para-parquet --inspect "caminho/do/arquivo.zip"
+dbf-para-parquet --cli "caminho/do/arquivo.dbc" "saida.parquet"
 ```
 
 ### Automação em Lote (Batch Scripts)
