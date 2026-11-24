@@ -209,55 +209,48 @@ dbf-para-parquet --inspect "caminho/do/arquivo.zip"
 dbf-para-parquet --cli "caminho/do/arquivo.dbc" "saida.parquet"
 ```
 
-### Automação em Lote (Batch Scripts)
+### Automação em Lote (Diretórios Inteiros e Scripts)
 
-#### 🐧 Linux (Bash / Cron / Airflow)
-Converter recursivamente todos os arquivos de uma pasta:
+Não é necessário criar loops manuais (`for` no bash ou `ForEach-Object` no PowerShell)! O conversor aceita pastas inteiras nativamente:
+
+#### 1. Converter Todos os Arquivos de uma Pasta (Modo Individual)
+Varre recursivamente a pasta de entrada processando `.dbf`, `.dbc`, `.zip`, `.rar` e `.7z`:
 ```bash
-#!/bin/bash
-# Converte todos os DBF, DBC e ZIP da pasta de entrada para Parquet
-INPUT_DIR="/dados/vigilancia/entradas"
-OUTPUT_DIR="/dados/vigilancia/parquet"
-mkdir -p "$OUTPUT_DIR"
+# No Linux:
+dbf-para-parquet --cli "/dados/vigilancia/entradas/" --out-dir "/dados/vigilancia/parquet/"
 
-for f in "$INPUT_DIR"/*.{dbf,DBF,dbc,DBC,zip,ZIP}; do
-    [ -f "$f" ] || continue
-    nome=$(basename "$f")
-    nome_sem_ext="${nome%.*}"
-    echo "Processando $nome..."
-    ./dbf-para-parquet-linux --cli "$f" "$OUTPUT_DIR/${nome_sem_ext}.parquet"
-done
+# No Windows:
+dbf-para-parquet-windows.exe --cli "C:\BasesVigilancia\Originais" --out-dir "C:\BasesVigilancia\Parquet"
 ```
 
-#### 🪟 Windows (PowerShell)
-```powershell
-# Execução em lote de todos os arquivos de um diretório
-$origem = "C:\BasesVigilancia\Originais"
-$destino = "C:\BasesVigilancia\Parquet"
-New-Item -ItemType Directory -Force -Path $destino
+#### 2. Juntar Arquivos com a Mesma Estrutura em um Único Parquet (Modo Unificado / Merge)
+Lê todos os arquivos da pasta (ou passados na lista) e **consolida tudo em um único arquivo Parquet ultra-compactado**:
+```bash
+# No Linux (ex: juntar todos os anos do SIM ou SINAN de uma pasta):
+dbf-para-parquet --cli "/dados/sim_anos/" --merge -o "/dados/parquet/SIM_Consolidado_2010_2024.parquet"
 
-Get-ChildItem -Path $origem -Include *.dbf,*.dbc,*.zip -Recurse | ForEach-Object {
-    $saida = Join-Path $destino ($_.BaseName + ".parquet")
-    Write-Host "Convertendo $($_.Name)..."
-    .\dbf-para-parquet-windows.exe --cli $_.FullName $saida
-}
+# No Windows:
+dbf-para-parquet-windows.exe --cli "C:\Bases\SIM" --merge -o "C:\Bases\SIM_Consolidado.parquet"
 ```
 
-#### 🐍 Python (via subprocess)
+#### 3. Integração em Python (via subprocess)
 ```python
 import subprocess
-from pathlib import Path
 
-def converter_base(origem: str, destino: str):
-    comando = ["./dbf-para-parquet-linux", "--cli", origem, destino]
-    resultado = subprocess.run(comando, capture_output=True, text=True)
-    if resultado.returncode == 0:
-        print(f"Sucesso: {destino}")
-    else:
-        print(f"Erro: {resultado.stderr}")
+# Converter pasta inteira para outra pasta em 1 linha:
+subprocess.run([
+    "dbf-para-parquet", "--cli",
+    "/dados/vigilancia/entradas/",
+    "--out-dir", "/dados/vigilancia/parquet/"
+], check=True)
 
-# Exemplo de chamada
-converter_base("DORJ2025.dbc", "DORJ2025.parquet")
+# Consolidar todos os arquivos da pasta em um único Parquet:
+subprocess.run([
+    "dbf-para-parquet", "--cli",
+    "/dados/vigilancia/sim/",
+    "--merge",
+    "-o", "/dados/vigilancia/SIM_Consolidado.parquet"
+], check=True)
 ```
 
 ---
