@@ -31,7 +31,7 @@ impl ArchiveManager {
             .and_then(|s| s.to_str())
             .unwrap_or("")
             .to_lowercase();
-        matches!(ext.as_str(), "zip" | "7z" | "rar")
+        matches!(ext.as_str(), "zip" | "7z" | "rar" | "dbc")
     }
 
     pub fn process_archive<P: AsRef<Path>>(archive_path: P) -> ArchiveExtractionResult {
@@ -51,6 +51,7 @@ impl ArchiveManager {
             "zip" => Self::process_zip(path, &archive_name),
             "7z" => Self::process_7z(path, &archive_name),
             "rar" => Self::process_rar(path, &archive_name),
+            "dbc" => Self::process_dbc(path, &archive_name),
             _ => ArchiveExtractionResult::Error {
                 archive_name,
                 message: format!("Formato de arquivo compactado não suportado: .{}", ext),
@@ -288,6 +289,37 @@ impl ArchiveManager {
                 dbf_files: dbfs,
                 _temp_dir: temp_dir,
             }
+        }
+    }
+
+    fn process_dbc(path: &Path, archive_name: &str) -> ArchiveExtractionResult {
+        let temp_dir = match TempDir::new() {
+            Ok(d) => d,
+            Err(e) => {
+                return ArchiveExtractionResult::Error {
+                    archive_name: archive_name.to_string(),
+                    message: format!("Erro ao criar diretório temporário para DBC: {}", e),
+                }
+            }
+        };
+
+        let stem = path
+            .file_stem()
+            .map(|s| s.to_string_lossy().to_string())
+            .unwrap_or_else(|| "dados".to_string());
+
+        let dbf_out = temp_dir.path().join(format!("{}.dbf", stem));
+
+        match datasus_dbc::decompress(path, &dbf_out) {
+            Ok(_) => ArchiveExtractionResult::Success {
+                archive_name: archive_name.to_string(),
+                dbf_files: vec![dbf_out],
+                _temp_dir: temp_dir,
+            },
+            Err(e) => ArchiveExtractionResult::Error {
+                archive_name: archive_name.to_string(),
+                message: format!("Falha ao descompactar arquivo DBC do DATASUS: {:?}", e),
+            },
         }
     }
 }

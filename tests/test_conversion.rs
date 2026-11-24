@@ -299,4 +299,58 @@ fn test_sinan_net_detection_and_conversion() {
     }
 }
 
+#[test]
+fn test_dissemin_dbc_detection_and_conversion() {
+    let test_cases = vec![
+        ("Bases_Dissemin_Exemplo/DOAC2022.dbc", HealthSystem::SIM, 4159),
+        ("Bases_Dissemin_Exemplo/DNAC2022.DBC", HealthSystem::SINASC, 14483),
+        ("Bases_Dissemin_Exemplo/CHAGBR15.dbc", HealthSystem::SinanNet, 4225),
+    ];
+
+    for (dbc_path_str, expected_sys, expected_records) in test_cases {
+        let p = PathBuf::from(dbc_path_str);
+        if !p.exists() {
+            continue;
+        }
+
+        assert!(ArchiveManager::is_archive(&p));
+        match ArchiveManager::process_archive(&p) {
+            ArchiveExtractionResult::Success {
+                archive_name,
+                dbf_files,
+                _temp_dir,
+            } => {
+                assert_eq!(dbf_files.len(), 1);
+                let dbf_file = &dbf_files[0];
+
+                let analysis = DbfDetector::analyze_header(
+                    dbf_file,
+                    Some(archive_name),
+                    "Bases_Dissemin_Exemplo".to_string(),
+                    true,
+                ).unwrap();
+
+                assert_eq!(analysis.system, expected_sys);
+                assert_eq!(analysis.num_records, expected_records);
+                // Todas as bases públicas do DISSEMIN devem ser classificadas como anonimizadas
+                assert_eq!(analysis.privacy, PrivacyLevel::WithoutPersonalData);
+
+                let out_parquet = tempfile::NamedTempFile::new().unwrap().into_temp_path().with_extension("parquet");
+                let summary = ParquetConverter::convert_single(
+                    dbf_file,
+                    &out_parquet,
+                    ConversionMode::EpidemiologicalDates,
+                    analysis.standard_encoding,
+                    None,
+                ).unwrap();
+
+                assert_eq!(summary.records, expected_records as u64);
+                assert!(out_parquet.exists());
+                assert!(std::fs::metadata(&out_parquet).unwrap().len() > 0);
+            }
+            _ => panic!("Falha ao extrair DBC {}", dbc_path_str),
+        }
+    }
+}
+
 

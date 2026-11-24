@@ -76,9 +76,9 @@ O diagnóstico em tempo real calcula a porcentagem exata de correspondência e d
 - **Padrão DBF Estrito**:
   - Respeita rigorosamente os tipos declarados no cabeçalho binário DBF ('C' para Utf8, 'D' para Date32, 'N'/'F' para Int32/Int64/Float64).
 
-### 5. Suporte Completo a Arquivos Compactados
-- Aceita diretamente arquivos `.zip`, `.rar` e `.7z`.
-- Localiza os arquivos `.dbf` internos, descompacta em diretório temporário, converte e **remove os arquivos temporários imediatamente** após o processamento, garantindo que o disco permaneça sempre limpo.
+### 5. Suporte Completo a Arquivos Compactados e Arquivos DBC (DATASUS)
+- Aceita diretamente arquivos compactados `.zip`, `.rar`, `.7z` e arquivos **`.dbc`** proprietários do DATASUS (comprimidos pelo algoritmo BLAST/implode do FTP DISSEMIN).
+- Localiza e descompacta os registros transparentemente em memória/diretório temporário, converte diretamente para Parquet e **remove os arquivos temporários imediatamente** após o término, eliminando a dependência do TabWin para pesquisadores e analistas de dados!
 
 ### 6. Junção de Arquivos (Merge) ou Conversão Individual
 - **Conversão Individual**: Cada DBF gera seu `.parquet` correspondente (com opção de escolher nome de saída quando processado arquivo avulso).

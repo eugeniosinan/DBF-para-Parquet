@@ -640,9 +640,9 @@ impl DbfConverterApp {
                         }
                         if ui.button("📄 Adicionar Arquivos...").clicked() {
                             if let Some(files) = rfd::FileDialog::new()
-                                .add_filter("Bases e Compactados", &["dbf", "zip", "7z", "rar"])
-                                .add_filter("DBF", &["dbf"])
-                                .add_filter("Compactados", &["zip", "7z", "rar"])
+                                .add_filter("Bases e Compactados", &["dbf", "dbc", "zip", "7z", "rar"])
+                                .add_filter("DBF / DBC (DATASUS)", &["dbf", "dbc"])
+                                .add_filter("Compactados", &["zip", "7z", "rar", "dbc"])
                                 .pick_files()
                             {
                                 self.add_paths(files);
@@ -660,7 +660,7 @@ impl DbfConverterApp {
                 painter.rect_stroke(drop_rect.rect, 6.0, stroke, egui::StrokeKind::Inside);
 
                 let label_text = if self.input_paths.is_empty() {
-                    "⬇️ Arraste e solte arquivos aqui (.dbf, .zip, .rar, .7z) ou pastas completas"
+                    "⬇️ Arraste e solte arquivos aqui (.dbf, .dbc, .zip, .rar, .7z) ou pastas completas"
                 } else {
                     "⬇️ Arraste mais arquivos ou pastas para adicionar à lista"
                 };

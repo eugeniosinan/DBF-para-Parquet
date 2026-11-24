@@ -6,8 +6,11 @@
 
 # Bases de dados e amostras epidemiológicas (Dados Protegidos - LGPD)
 /Bases de Exemplo/
+/Bases_Dissemin_Exemplo/
 *.dbf
 *.DBF
+*.dbc
+*.DBC
 *.parquet
 *.parquet.tmp
 

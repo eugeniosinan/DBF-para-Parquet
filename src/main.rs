@@ -36,8 +36,8 @@ fn main() -> Result<(), eframe::Error> {
 fn run_cli(args: &[String], inspect_only: bool) {
     if args.is_empty() {
         println!("Uso CLI:");
-        println!("  dbf-para-parquet --inspect <arquivo.dbf|zip|rar|7z>");
-        println!("  dbf-para-parquet --cli <arquivo.dbf|zip|rar|7z> [saida.parquet]");
+        println!("  dbf-para-parquet --inspect <arquivo.dbf|dbc|zip|rar|7z>");
+        println!("  dbf-para-parquet --cli <arquivo.dbf|dbc|zip|rar|7z> [saida.parquet]");
         return;
     }
 

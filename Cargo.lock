@@ -129,6 +129,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "arraydeque"
+version = "0.4.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f0ffd3d69bd89910509a5d31d1f1353f38ccffdd116dd0099bbd6627f7bd8ad8"
+
+[[package]]
 name = "arrayvec"
 version = "0.7.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -899,6 +905,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f27ae1dd37df86211c42e150270f82743308803d90a6f6e6651cd730d5e1732f"
 
 [[package]]
+name = "datasus-dbc"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6d271fe7d81346c0f41089c1427f3558dc31719a59a816b54ceb0f3667942e1a"
+dependencies = [
+ "explode",
+]
+
+[[package]]
 name = "dbf-para-parquet"
 version = "0.1.0"
 dependencies = [
@@ -906,6 +921,7 @@ dependencies = [
  "arrow-array",
  "arrow-schema",
  "chrono",
+ "datasus-dbc",
  "eframe",
  "egui",
  "encoding_rs",
@@ -1194,6 +1210,15 @@ name = "error-code"
 version = "3.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0b5343afd4a8365a643ac588dab4cf234a190c7f6c88c9f6dd6ffe00837661b7"
+
+[[package]]
+name = "explode"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "46695dd0a1b7a2a6c3e0800604bd9738c2699682b9fc325d4886b6c1a78025ac"
+dependencies = [
+ "arraydeque",
+]
 
 [[package]]
 name = "fastrand"
