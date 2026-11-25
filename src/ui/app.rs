@@ -69,34 +69,102 @@ pub enum ThemeMode {
 impl ThemeMode {
     pub fn display_name(&self) -> &str {
         match self {
-            ThemeMode::Dark => "Escuro",
+            ThemeMode::Dark => "Escuro Moderno",
             ThemeMode::DatasusBlue => "Azul Saúde",
-            ThemeMode::Light => "Claro",
+            ThemeMode::Light => "Claro Minimalista",
         }
     }
 
     pub fn apply(&self, ctx: &egui::Context) {
+        let mut style = (*ctx.style()).clone();
+
+        // Espaçamentos modernos e confortáveis (elimina a rigidez de WinForms anos 90)
+        style.spacing.item_spacing = Vec2::new(10.0, 9.0);
+        style.spacing.button_padding = Vec2::new(14.0, 7.5);
+        style.spacing.indent = 16.0;
+
         match self {
             ThemeMode::Dark => {
-                ctx.set_visuals(egui::Visuals::dark());
-            }
-            ThemeMode::Light => {
-                ctx.set_visuals(egui::Visuals::light());
+                let mut visuals = egui::Visuals::dark();
+                visuals.panel_fill = Color32::from_rgb(11, 15, 25); // #0B0F19 canvas escuro
+                visuals.window_fill = Color32::from_rgb(22, 31, 48); // #161F30 superfície de cards
+                visuals.extreme_bg_color = Color32::from_rgb(15, 23, 42); // #0F172A inputs/text_edit
+
+                visuals.widgets.noninteractive.corner_radius = egui::CornerRadius::same(8);
+                visuals.widgets.inactive.corner_radius = egui::CornerRadius::same(8);
+                visuals.widgets.hovered.corner_radius = egui::CornerRadius::same(8);
+                visuals.widgets.active.corner_radius = egui::CornerRadius::same(8);
+
+                visuals.widgets.noninteractive.bg_fill = Color32::from_rgb(22, 31, 48);
+                visuals.widgets.noninteractive.bg_stroke = Stroke::new(1.0_f32, Color32::from_rgb(37, 49, 74));
+                visuals.widgets.inactive.bg_fill = Color32::from_rgb(30, 41, 64);
+                visuals.widgets.inactive.bg_stroke = Stroke::new(1.0_f32, Color32::from_rgb(45, 60, 90));
+                visuals.widgets.hovered.bg_fill = Color32::from_rgb(45, 60, 92);
+                visuals.widgets.hovered.bg_stroke = Stroke::new(1.0_f32, Color32::from_rgb(70, 95, 140));
+                visuals.widgets.active.bg_fill = Color32::from_rgb(37, 99, 235);
+                visuals.widgets.active.bg_stroke = Stroke::new(1.0_f32, Color32::from_rgb(96, 165, 250));
+                visuals.selection.bg_fill = Color32::from_rgb(37, 99, 235);
+
+                style.visuals = visuals;
             }
             ThemeMode::DatasusBlue => {
                 let mut visuals = egui::Visuals::dark();
-                visuals.panel_fill = Color32::from_rgb(15, 23, 42); // slate-900
-                visuals.window_fill = Color32::from_rgb(30, 41, 59); // slate-800
-                visuals.extreme_bg_color = Color32::from_rgb(10, 15, 29); // slate-950
-                visuals.widgets.noninteractive.bg_fill = Color32::from_rgb(30, 41, 59);
-                visuals.widgets.inactive.bg_fill = Color32::from_rgb(51, 65, 85); // slate-700
-                visuals.widgets.hovered.bg_fill = Color32::from_rgb(71, 85, 105);
-                visuals.widgets.active.bg_fill = Color32::from_rgb(14, 116, 144); // cyan-700
-                visuals.selection.bg_fill = Color32::from_rgb(2, 132, 199); // sky-600
-                ctx.set_visuals(visuals);
+                visuals.panel_fill = Color32::from_rgb(8, 18, 33);
+                visuals.window_fill = Color32::from_rgb(14, 32, 58);
+                visuals.extreme_bg_color = Color32::from_rgb(10, 24, 44);
+
+                visuals.widgets.noninteractive.corner_radius = egui::CornerRadius::same(8);
+                visuals.widgets.inactive.corner_radius = egui::CornerRadius::same(8);
+                visuals.widgets.hovered.corner_radius = egui::CornerRadius::same(8);
+                visuals.widgets.active.corner_radius = egui::CornerRadius::same(8);
+
+                visuals.widgets.noninteractive.bg_fill = Color32::from_rgb(14, 32, 58);
+                visuals.widgets.noninteractive.bg_stroke = Stroke::new(1.0_f32, Color32::from_rgb(24, 52, 92));
+                visuals.widgets.inactive.bg_fill = Color32::from_rgb(20, 46, 80);
+                visuals.widgets.inactive.bg_stroke = Stroke::new(1.0_f32, Color32::from_rgb(32, 70, 122));
+                visuals.widgets.hovered.bg_fill = Color32::from_rgb(28, 65, 112);
+                visuals.widgets.hovered.bg_stroke = Stroke::new(1.0_f32, Color32::from_rgb(56, 189, 248));
+                visuals.widgets.active.bg_fill = Color32::from_rgb(14, 116, 144);
+                visuals.selection.bg_fill = Color32::from_rgb(2, 132, 199);
+
+                style.visuals = visuals;
+            }
+            ThemeMode::Light => {
+                let mut visuals = egui::Visuals::light();
+                visuals.panel_fill = Color32::from_rgb(248, 250, 252);
+                visuals.window_fill = Color32::from_rgb(255, 255, 255);
+                visuals.extreme_bg_color = Color32::from_rgb(241, 245, 249);
+
+                visuals.widgets.noninteractive.corner_radius = egui::CornerRadius::same(8);
+                visuals.widgets.inactive.corner_radius = egui::CornerRadius::same(8);
+                visuals.widgets.hovered.corner_radius = egui::CornerRadius::same(8);
+                visuals.widgets.active.corner_radius = egui::CornerRadius::same(8);
+
+                visuals.widgets.noninteractive.bg_fill = Color32::from_rgb(255, 255, 255);
+                visuals.widgets.noninteractive.bg_stroke = Stroke::new(1.0_f32, Color32::from_rgb(226, 232, 240));
+                visuals.widgets.inactive.bg_fill = Color32::from_rgb(241, 245, 249);
+                visuals.widgets.inactive.bg_stroke = Stroke::new(1.0_f32, Color32::from_rgb(203, 213, 225));
+                visuals.widgets.hovered.bg_fill = Color32::from_rgb(226, 232, 240);
+                visuals.widgets.hovered.bg_stroke = Stroke::new(1.0_f32, Color32::from_rgb(148, 163, 184));
+                visuals.widgets.active.bg_fill = Color32::from_rgb(37, 99, 235);
+                visuals.selection.bg_fill = Color32::from_rgb(191, 219, 254);
+
+                style.visuals = visuals;
             }
         }
+
+        ctx.set_style(style);
     }
+}
+
+/// Helper para renderizar um card moderno com cantos arredondados e borda sutil
+fn ui_card<R>(ui: &mut egui::Ui, add_contents: impl FnOnce(&mut egui::Ui) -> R) -> R {
+    let frame = egui::Frame::new()
+        .fill(ui.visuals().window_fill)
+        .stroke(ui.visuals().widgets.noninteractive.bg_stroke)
+        .corner_radius(egui::CornerRadius::same(10))
+        .inner_margin(egui::Margin::symmetric(18, 16));
+    frame.show(ui, add_contents).inner
 }
 
 pub struct DbfConverterApp {
@@ -634,38 +702,34 @@ impl eframe::App for DbfConverterApp {
             }
         }
 
-        // Top Panel: Cabeçalho com Nome do Autor e Abas de Navegação
+        // Top Panel: Cabeçalho com Logo, Título e Abas de Navegação
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
-            ui.add_space(6.0);
+            ui.add_space(8.0);
             ui.horizontal(|ui| {
                 if let Some(tex) = &self.logo_texture {
-                    ui.add(egui::Image::new(tex).max_size(Vec2::new(38.0, 44.0)));
+                    ui.add(egui::Image::new(tex).max_size(Vec2::new(42.0, 48.0)));
                 }
 
                 ui.vertical(|ui| {
-                    ui.heading(RichText::new("📊 Conversor de Bases da Vigilância para Parquet").strong().size(19.0));
-                    ui.horizontal(|ui| {
-                        ui.label(RichText::new("Eugênio Araújo • Centro de Inteligência Epidemiológica da SMS Rio").strong().color(Color32::from_rgb(130, 185, 255)));
-                        ui.label("•");
-                        ui.label(RichText::new("SIM • SINASC • SIVEP SRAG • SIVEP SG • DENGON • SINAN NET").color(Color32::from_rgb(175, 185, 205)));
-                    });
+                    ui.heading(RichText::new("Conversor de Bases da Vigilância — DBF/DBC para Parquet").strong().size(19.0));
+                    ui.label(RichText::new("Padronização Oficial DATASUS • SIM, SINASC, SIVEP, DENGON, SINAN NET").color(Color32::from_rgb(148, 163, 184)).size(12.5));
                 });
 
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                    if ui.button("ℹ Sobre").on_hover_text("Informações sobre o autor e o sistema").clicked() {
+                    if ui.button("ℹ Sobre").on_hover_text("Informações sobre o sistema e autoria").clicked() {
                         self.info_modal = Some(InfoModalType::AboutAuthor);
                     }
 
                     // Seletor de Tema
                     let prev_theme = self.theme_mode;
-                    ui.menu_button(format!("🎨 {}", self.theme_mode.display_name()), |ui| {
-                        if ui.selectable_value(&mut self.theme_mode, ThemeMode::Dark, "🌙 Escuro").clicked() {
+                    ui.menu_button(format!("🎨 Tema: {}", self.theme_mode.display_name()), |ui| {
+                        if ui.selectable_value(&mut self.theme_mode, ThemeMode::Dark, "🌙 Escuro Moderno").clicked() {
                             ui.close();
                         }
                         if ui.selectable_value(&mut self.theme_mode, ThemeMode::DatasusBlue, "🏥 Azul Saúde").clicked() {
                             ui.close();
                         }
-                        if ui.selectable_value(&mut self.theme_mode, ThemeMode::Light, "☀ Claro").clicked() {
+                        if ui.selectable_value(&mut self.theme_mode, ThemeMode::Light, "☀ Claro Minimalista").clicked() {
                             ui.close();
                         }
                     });
@@ -674,25 +738,37 @@ impl eframe::App for DbfConverterApp {
                     }
                 });
             });
-            ui.add_space(6.0);
+            ui.add_space(8.0);
 
+            // Abas de navegação estilo Segmented Control moderno
             ui.horizontal(|ui| {
-                ui.selectable_value(&mut self.active_tab, AppTab::FilesAndSettings, "📁 1. Conversão de Dados");
-                ui.selectable_value(
-                    &mut self.active_tab,
-                    AppTab::PreReport,
-                    format!("🔍 2. Auditoria e Análise Prévia ({})", self.inspected_dbfs.len()),
-                );
-                if self.post_report.is_some() {
-                    ui.selectable_value(&mut self.active_tab, AppTab::PostReport, "✅ 3. Relatório de Execução");
-                }
+                egui::Frame::new()
+                    .fill(ui.visuals().widgets.inactive.bg_fill)
+                    .stroke(ui.visuals().widgets.noninteractive.bg_stroke)
+                    .corner_radius(egui::CornerRadius::same(8))
+                    .inner_margin(egui::Margin::symmetric(4, 3))
+                    .show(ui, |ui| {
+                        ui.spacing_mut().item_spacing = Vec2::new(4.0, 0.0);
+
+                        let b1 = ui.selectable_label(self.active_tab == AppTab::FilesAndSettings, "📁 1. Conversão de Dados");
+                        if b1.clicked() { self.active_tab = AppTab::FilesAndSettings; }
+
+                        let pre_label = format!("🔍 2. Auditoria Prévia ({})", self.inspected_dbfs.len());
+                        let b2 = ui.selectable_label(self.active_tab == AppTab::PreReport, pre_label);
+                        if b2.clicked() { self.active_tab = AppTab::PreReport; }
+
+                        if self.post_report.is_some() {
+                            let b3 = ui.selectable_label(self.active_tab == AppTab::PostReport, "✅ 3. Relatório da Conversão");
+                            if b3.clicked() { self.active_tab = AppTab::PostReport; }
+                        }
+                    });
             });
-            ui.add_space(4.0);
+            ui.add_space(6.0);
         });
 
-        // Bottom Panel: Status e Progresso
+        // Bottom Panel: Status, Progresso e Autoria Exclusiva no Rodapé
         egui::TopBottomPanel::bottom("bottom_panel").show(ctx, |ui| {
-            ui.add_space(4.0);
+            ui.add_space(6.0);
             if self.is_converting {
                 if let Some(prog) = &self.current_progress {
                     let fraction = if prog.total_records_expected > 0 {
@@ -704,16 +780,17 @@ impl eframe::App for DbfConverterApp {
                 } else {
                     ui.add(egui::ProgressBar::new(0.0).animate(true));
                 }
+                ui.add_space(4.0);
             }
 
             ui.horizontal(|ui| {
-                ui.label(RichText::new("Status:").strong());
-                ui.label(&self.status_message);
+                ui.label(RichText::new("Status:").strong().color(Color32::from_rgb(148, 163, 184)));
+                ui.label(RichText::new(&self.status_message).color(Color32::from_rgb(226, 232, 240)));
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                    ui.label(RichText::new("Eugênio Araújo — CIE / SMS Rio").small().italics().color(Color32::from_rgb(140, 160, 180)));
+                    ui.label(RichText::new("Eugênio Araújo • Centro de Inteligência Epidemiológica da SMS Rio (CIE / SVS / SMS-Rio)").small().strong().color(Color32::from_rgb(148, 163, 184)));
                 });
             });
-            ui.add_space(4.0);
+            ui.add_space(6.0);
         });
 
         // Central Panel: Conteúdo da Aba ativa
@@ -734,17 +811,21 @@ impl eframe::App for DbfConverterApp {
 impl DbfConverterApp {
     fn ui_files_and_settings(&mut self, ui: &mut egui::Ui) {
         ScrollArea::vertical().show(ui, |ui| {
+            ui.add_space(4.0);
+
             // ==========================================
             // PASSO 1: ORIGEM DOS DADOS (ARQUIVOS / PASTAS)
             // ==========================================
-            ui.group(|ui| {
+            ui_card(ui, |ui| {
                 ui.horizontal(|ui| {
-                    ui.label(RichText::new("📁 PASSO 1 • Seleção dos Arquivos ou Pastas").strong().size(15.0));
+                    ui.label(RichText::new(" 1 ").strong().color(Color32::WHITE).background_color(Color32::from_rgb(37, 99, 235)));
+                    ui.label(RichText::new("PASSO 1 • Seleção dos Arquivos ou Pastas").strong().size(15.5));
+
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                         if ui.button("🗑 Limpar Tudo").clicked() {
                             self.clear_inputs();
                         }
-                        if ui.button("📂 Adicionar Pasta Inteira").on_hover_text("Varre recursivamente a pasta selecionada, localizando e descompactando todos os DBF e ZIP/RAR/7Z.").clicked() {
+                        if ui.button("📂 Adicionar Pasta...").on_hover_text("Varre recursivamente a pasta selecionada, localizando e descompactando todos os DBF e ZIP/RAR/7Z.").clicked() {
                             if let Some(dir) = rfd::FileDialog::new().pick_folder() {
                                 self.add_paths(vec![dir]);
                             }
@@ -783,13 +864,24 @@ impl DbfConverterApp {
                     });
                 });
 
-                ui.separator();
+                ui.add_space(8.0);
 
-                // Dropzone moderna e espaçosa
-                let drop_rect = ui.allocate_response(Vec2::new(ui.available_width(), 65.0), egui::Sense::hover());
+                // Dropzone moderna interativa
+                let drop_height = 80.0;
+                let (drop_rect, drop_resp) = ui.allocate_exact_size(Vec2::new(ui.available_width(), drop_height), egui::Sense::hover());
+                let is_hovered = drop_resp.hovered();
+                let border_color = if is_hovered {
+                    Color32::from_rgb(96, 165, 250)
+                } else {
+                    Color32::from_rgb(51, 65, 85)
+                };
+                let bg_color = if is_hovered {
+                    Color32::from_rgba_premultiplied(37, 99, 235, 30)
+                } else {
+                    Color32::from_rgba_premultiplied(15, 23, 42, 100)
+                };
                 let painter = ui.painter();
-                let stroke = Stroke::new(1.5_f32, Color32::from_rgb(70, 130, 230));
-                painter.rect_stroke(drop_rect.rect, 6.0, stroke, egui::StrokeKind::Inside);
+                painter.rect(drop_rect, 8.0, bg_color, Stroke::new(1.5_f32, border_color), egui::StrokeKind::Inside);
 
                 let label_text = if self.input_paths.is_empty() {
                     "⬇ Arraste e solte arquivos aqui (.dbf, .dbc, .zip, .rar, .7z) ou pastas completas"
@@ -797,30 +889,39 @@ impl DbfConverterApp {
                     "⬇ Arraste mais arquivos ou pastas para adicionar à lista"
                 };
                 painter.text(
-                    drop_rect.rect.center(),
+                    drop_rect.center() - Vec2::new(0.0, 10.0),
                     egui::Align2::CENTER_CENTER,
                     label_text,
                     egui::FontId::proportional(14.0),
-                    Color32::from_rgb(180, 205, 240),
+                    if is_hovered { Color32::WHITE } else { Color32::from_rgb(203, 213, 225) },
+                );
+                painter.text(
+                    drop_rect.center() + Vec2::new(0.0, 14.0),
+                    egui::Align2::CENTER_CENTER,
+                    "Descompressão transparente de DBC e extração direta de pacotes compactados",
+                    egui::FontId::proportional(11.5),
+                    Color32::from_rgb(148, 163, 184),
                 );
 
                 if !self.input_paths.is_empty() {
-                    ui.add_space(4.0);
+                    ui.add_space(6.0);
                     ui.horizontal(|ui| {
-                        ui.label(RichText::new(format!("Itens adicionados ({}):", self.input_paths.len())).small().italics());
-                        ui.label(RichText::new(format!("• {} base(s) DBF identificada(s)", self.inspected_dbfs.len())).small().color(Color32::from_rgb(100, 210, 130)));
+                        ui.label(RichText::new(format!("Itens adicionados ({}):", self.input_paths.len())).small().color(Color32::from_rgb(148, 163, 184)));
+                        ui.label(RichText::new(format!("• {} base(s) DBF identificada(s)", self.inspected_dbfs.len())).small().strong().color(Color32::from_rgb(52, 211, 153)));
                     });
                 }
             });
 
-            ui.add_space(8.0);
+            ui.add_space(10.0);
 
             // ==========================================
             // PASSO 2: DIAGNÓSTICO E PADRONIZAÇÃO DAS BASES
             // ==========================================
-            ui.group(|ui| {
+            ui_card(ui, |ui| {
                 ui.horizontal(|ui| {
-                    ui.label(RichText::new("🔍 PASSO 2 • Diagnóstico e Padronização das Bases").strong().size(15.0));
+                    ui.label(RichText::new(" 2 ").strong().color(Color32::WHITE).background_color(Color32::from_rgb(37, 99, 235)));
+                    ui.label(RichText::new("PASSO 2 • Diagnóstico e Padronização das Bases").strong().size(15.5));
+
                     if !self.inspected_dbfs.is_empty() {
                         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                             if ui.button("🔍 Ver Auditoria Detalhada de Colunas e LGPD").clicked() {
@@ -829,41 +930,42 @@ impl DbfConverterApp {
                         });
                     }
                 });
-                ui.separator();
+
+                ui.add_space(8.0);
 
                 if self.inspected_dbfs.is_empty() {
-                    ui.label(RichText::new("Nenhuma base DBF identificada ainda. Adicione arquivos ou pastas no Passo 1.").italics().color(Color32::GRAY));
+                    ui.label(RichText::new("Nenhuma base DBF identificada ainda. Adicione arquivos ou pastas no Passo 1.").italics().color(Color32::from_rgb(148, 163, 184)));
                 } else {
-                    egui::Grid::new("step2_preview_grid").striped(true).show(ui, |ui| {
-                        ui.label(RichText::new("Base DBF").strong());
-                        ui.label(RichText::new("Sistema Reconhecido").strong());
-                        ui.label(RichText::new("Correspondência de Colunas").strong());
-                        ui.label(RichText::new("Encoding Padronizado").strong());
-                        ui.label(RichText::new("Privacidade LGPD").strong());
-                        ui.label(RichText::new("Registros").strong());
-                        ui.label(RichText::new("Tamanho").strong());
+                    egui::Grid::new("step2_preview_grid").striped(true).spacing(Vec2::new(16.0, 8.0)).show(ui, |ui| {
+                        ui.label(RichText::new("Base DBF").strong().color(Color32::from_rgb(148, 163, 184)));
+                        ui.label(RichText::new("Sistema Reconhecido").strong().color(Color32::from_rgb(148, 163, 184)));
+                        ui.label(RichText::new("Correspondência Oficial").strong().color(Color32::from_rgb(148, 163, 184)));
+                        ui.label(RichText::new("Encoding Padronizado").strong().color(Color32::from_rgb(148, 163, 184)));
+                        ui.label(RichText::new("Privacidade LGPD").strong().color(Color32::from_rgb(148, 163, 184)));
+                        ui.label(RichText::new("Registros").strong().color(Color32::from_rgb(148, 163, 184)));
+                        ui.label(RichText::new("Tamanho").strong().color(Color32::from_rgb(148, 163, 184)));
                         ui.end_row();
 
                         for d in &self.inspected_dbfs {
-                            ui.label(&d.display_name);
+                            ui.label(RichText::new(&d.display_name).strong());
 
                             let sys_color = match d.system {
-                                HealthSystem::SIM => Color32::from_rgb(70, 160, 240),
-                                HealthSystem::SINASC => Color32::from_rgb(100, 200, 120),
-                                HealthSystem::SivepSrag => Color32::from_rgb(230, 160, 60),
-                                HealthSystem::SivepSg => Color32::from_rgb(200, 130, 220),
-                                HealthSystem::Dengon => Color32::from_rgb(80, 210, 210),
-                                HealthSystem::SinanNet => Color32::from_rgb(235, 90, 60),
+                                HealthSystem::SIM => Color32::from_rgb(96, 165, 250),
+                                HealthSystem::SINASC => Color32::from_rgb(52, 211, 153),
+                                HealthSystem::SivepSrag => Color32::from_rgb(251, 146, 60),
+                                HealthSystem::SivepSg => Color32::from_rgb(192, 132, 252),
+                                HealthSystem::Dengon => Color32::from_rgb(45, 212, 191),
+                                HealthSystem::SinanNet => Color32::from_rgb(248, 113, 113),
                                 _ => Color32::LIGHT_GRAY,
                             };
                             ui.label(RichText::new(d.system.code()).color(sys_color).strong());
 
                             ui.label(format!("{:.1}% ({}/{})", d.match_percentage, d.matched_columns_count, d.num_columns));
-                            ui.label(RichText::new(d.standard_encoding.display_name()).color(Color32::from_rgb(120, 200, 140)));
+                            ui.label(RichText::new(d.standard_encoding.display_name()).color(Color32::from_rgb(110, 231, 183)));
 
                             let priv_color = match d.privacy {
-                                PrivacyLevel::WithPersonalData => Color32::from_rgb(240, 120, 80),
-                                PrivacyLevel::WithoutPersonalData => Color32::from_rgb(100, 200, 120),
+                                PrivacyLevel::WithPersonalData => Color32::from_rgb(251, 113, 133),
+                                PrivacyLevel::WithoutPersonalData => Color32::from_rgb(52, 211, 153),
                             };
                             ui.label(RichText::new(if d.privacy == PrivacyLevel::WithPersonalData { "Identificada" } else { "Anonimizada" }).color(priv_color));
 
@@ -875,37 +977,41 @@ impl DbfConverterApp {
                 }
             });
 
-            ui.add_space(8.0);
+            ui.add_space(10.0);
 
             // ==========================================
             // PASSO 3: MODO DE CONVERSÃO E DESTINO
             // ==========================================
-            ui.group(|ui| {
-                ui.label(RichText::new("⚙ PASSO 3 • Opções e Destino de Conversão").strong().size(15.0));
-                ui.separator();
+            ui_card(ui, |ui| {
+                ui.horizontal(|ui| {
+                    ui.label(RichText::new(" 3 ").strong().color(Color32::WHITE).background_color(Color32::from_rgb(37, 99, 235)));
+                    ui.label(RichText::new("PASSO 3 • Opções e Destino de Conversão").strong().size(15.5));
+                });
+
+                ui.add_space(8.0);
 
                 ui.horizontal(|ui| {
-                    ui.label(RichText::new("Modo de Geração:").strong());
+                    ui.label(RichText::new("Modo de Saída:").strong());
                     ui.radio_value(
                         &mut self.output_mode,
                         OutputMode::Individual,
-                        "Individual (Gera 1 arquivo Parquet por DBF mantendo o mesmo nome)",
+                        "Individual (1 Parquet por DBF mantendo nome original)",
                     );
                     ui.radio_value(
                         &mut self.output_mode,
                         OutputMode::Merged,
-                        "Unificado (Juntar múltiplos arquivos em 1 único Parquet consolidado)",
+                        "Unificado (Merge de múltiplos arquivos em 1 Parquet consolidado)",
                     );
                 });
 
-                ui.add_space(4.0);
+                ui.add_space(6.0);
                 ui.horizontal(|ui| {
                     ui.label(RichText::new("Pasta de Destino:").strong());
                     let dir_display = self
                         .custom_output_dir
                         .as_ref()
                         .map(|p| p.to_string_lossy().to_string())
-                        .unwrap_or_else(|| "Mesma pasta de origem do arquivo DBF".to_string());
+                        .unwrap_or_else(|| "Mesma pasta de origem do arquivo".to_string());
                     ui.label(RichText::new(dir_display).monospace());
 
                     if ui.button("Alterar Pasta...").clicked() {
@@ -913,29 +1019,29 @@ impl DbfConverterApp {
                             self.custom_output_dir = Some(d);
                         }
                     }
-                    if self.custom_output_dir.is_some() && ui.button("Restaurar Pasta Original").clicked() {
+                    if self.custom_output_dir.is_some() && ui.button("Restaurar Original").clicked() {
                         self.custom_output_dir = None;
                     }
                 });
 
                 if self.output_mode == OutputMode::Merged || self.inspected_dbfs.len() == 1 {
-                    ui.add_space(4.0);
+                    ui.add_space(6.0);
                     ui.horizontal(|ui| {
                         ui.label(RichText::new("Nome do Parquet:").strong());
                         ui.text_edit_singleline(&mut self.custom_output_filename);
                         if self.output_mode == OutputMode::Individual {
-                            ui.label(RichText::new("(deixe em branco para usar exatamente o mesmo nome do DBF)").small().italics().color(Color32::GRAY));
+                            ui.label(RichText::new("(deixe em branco para usar o mesmo nome do DBF)").small().italics().color(Color32::from_rgb(148, 163, 184)));
                         }
                     });
                 }
 
-                ui.add_space(6.0);
+                ui.add_space(8.0);
                 ui.horizontal(|ui| {
-                    ui.label(RichText::new("Tratamento de Dados:").strong());
+                    ui.label(RichText::new("Tratamento de Datas:").strong());
                     ui.radio_value(
                         &mut self.conversion_mode,
                         ConversionMode::EpidemiologicalDates,
-                        "Padrão Saúde / DuckDB (Recomendado)",
+                        "Padrão Saúde / DuckDB (Date32)",
                     );
                     if ui.button("ℹ").on_hover_text("Clique para ver detalhes do Padrão Saúde").clicked() {
                         self.info_modal = Some(InfoModalType::HealthPattern);
@@ -951,13 +1057,13 @@ impl DbfConverterApp {
                     }
                 });
 
-                ui.add_space(4.0);
+                ui.add_space(6.0);
                 ui.horizontal_wrapped(|ui| {
                     ui.label(RichText::new("Codificação (Encoding):").strong());
                     ui.radio_value(
                         &mut self.encoding_choice,
                         EncodingChoice::AutomaticStandard,
-                        "Automático (Padronizado por Tipo de Base — Recomendado)",
+                        "Automático (Oficial por Agravo)",
                     ).on_hover_text(
                         "Aplica automaticamente o padrão oficial do sistema reconhecido pelas colunas:\n\
                         SIM, SINASC, SIVEP SRAG, SIVEP SG e DENGON utilizam ISO-8859-1 conforme padrão SVS/DuckDB."
@@ -985,9 +1091,13 @@ impl DbfConverterApp {
             // ==========================================
             // PASSO 4: EXECUÇÃO DA CONVERSÃO
             // ==========================================
-            ui.group(|ui| {
-                ui.label(RichText::new("🚀 PASSO 4 • Executar Conversão").strong().size(15.0));
-                ui.separator();
+            ui_card(ui, |ui| {
+                ui.horizontal(|ui| {
+                    ui.label(RichText::new(" 4 ").strong().color(Color32::WHITE).background_color(Color32::from_rgb(37, 99, 235)));
+                    ui.label(RichText::new("PASSO 4 • Executar Conversão").strong().size(15.5));
+                });
+
+                ui.add_space(10.0);
 
                 ui.horizontal(|ui| {
                     let can_convert = !self.inspected_dbfs.is_empty() && !self.is_converting;
@@ -995,20 +1105,21 @@ impl DbfConverterApp {
                         can_convert,
                         egui::Button::new(
                             RichText::new(if self.is_converting {
-                                "⏳ CONVERTENDO BASES..."
+                                "⏳ Convertendo bases em streaming..."
                             } else {
-                                "🚀 CONVERTER PARA PARQUET"
+                                "⚡ CONVERTER PARA PARQUET (ZSTD)"
                             })
-                            .size(16.0)
+                            .size(15.5)
                             .strong()
                             .color(Color32::WHITE),
                         )
                         .fill(if can_convert {
-                            Color32::from_rgb(25, 140, 65)
+                            Color32::from_rgb(16, 185, 129) // Emerald 500
                         } else {
-                            Color32::from_gray(80)
+                            Color32::from_rgb(51, 65, 85) // Slate 700
                         })
-                        .min_size(Vec2::new(320.0, 46.0)),
+                        .min_size(Vec2::new(340.0, 48.0))
+                        .corner_radius(egui::CornerRadius::same(8)),
                     );
 
                     if btn.clicked() {
@@ -1022,6 +1133,7 @@ impl DbfConverterApp {
                     }
                 });
             });
+            ui.add_space(8.0);
         });
     }
 
@@ -1041,7 +1153,7 @@ impl DbfConverterApp {
             if let Some(report) = &self.pre_report {
                 // Alertas de arquivos compactados sem DBF
                 if !report.invalid_archives_without_dbf.is_empty() {
-                    ui.group(|ui| {
+                    ui_card(ui, |ui| {
                         ui.label(
                             RichText::new("⚠ Arquivos Compactados Sem Base DBF Detectada:")
                                 .color(Color32::from_rgb(255, 160, 50))
@@ -1060,54 +1172,57 @@ impl DbfConverterApp {
                 }
 
                 ui.label(RichText::new(format!("Total de bases DBF prontas para conversão: {}", report.valid_dbfs.len())).strong());
-                ui.add_space(4.0);
+                ui.add_space(6.0);
 
-                egui::Grid::new("pre_report_grid").striped(true).show(ui, |ui| {
-                    ui.label(RichText::new("Arquivo").strong());
-                    ui.label(RichText::new("Base Identificada").strong());
-                    ui.label(RichText::new("Correspondência").strong());
-                    ui.label(RichText::new("Encoding Padronizado").strong());
-                    ui.label(RichText::new("Privacidade LGPD").strong());
-                    ui.label(RichText::new("Registros").strong());
-                    ui.label(RichText::new("Tamanho").strong());
-                    ui.end_row();
-
-                    for item in &report.valid_dbfs {
-                        let fname = if let Some(a) = &item.source_archive {
-                            format!("{} (em {})", item.display_name, a)
-                        } else {
-                            item.display_name.clone()
-                        };
-                        ui.label(fname);
-
-                        let sys_color = match item.system {
-                            HealthSystem::SIM => Color32::from_rgb(70, 160, 240),
-                            HealthSystem::SINASC => Color32::from_rgb(100, 200, 120),
-                            HealthSystem::SivepSrag => Color32::from_rgb(230, 160, 60),
-                            HealthSystem::SivepSg => Color32::from_rgb(200, 130, 220),
-                            HealthSystem::Dengon => Color32::from_rgb(80, 210, 210),
-                            _ => Color32::LIGHT_GRAY,
-                        };
-                        ui.label(RichText::new(item.system.code()).color(sys_color).strong());
-                        ui.label(format!("{:.1}% ({}/{})", item.match_percentage, item.matched_columns_count, item.num_columns));
-                        ui.label(RichText::new(item.standard_encoding.display_name()).color(Color32::from_rgb(120, 200, 140)));
-
-                        let priv_color = match item.privacy {
-                            PrivacyLevel::WithPersonalData => Color32::from_rgb(240, 120, 80),
-                            PrivacyLevel::WithoutPersonalData => Color32::from_rgb(100, 200, 120),
-                        };
-                        ui.label(RichText::new(item.privacy.display_name()).color(priv_color));
-
-                        ui.label(item.num_records.to_string());
-                        ui.label(format!("{:.2} MB", item.file_size_bytes as f64 / (1024.0 * 1024.0)));
+                ui_card(ui, |ui| {
+                    egui::Grid::new("pre_report_grid").striped(true).spacing(Vec2::new(16.0, 8.0)).show(ui, |ui| {
+                        ui.label(RichText::new("Arquivo").strong().color(Color32::from_rgb(148, 163, 184)));
+                        ui.label(RichText::new("Base Identificada").strong().color(Color32::from_rgb(148, 163, 184)));
+                        ui.label(RichText::new("Correspondência").strong().color(Color32::from_rgb(148, 163, 184)));
+                        ui.label(RichText::new("Encoding Padronizado").strong().color(Color32::from_rgb(148, 163, 184)));
+                        ui.label(RichText::new("Privacidade LGPD").strong().color(Color32::from_rgb(148, 163, 184)));
+                        ui.label(RichText::new("Registros").strong().color(Color32::from_rgb(148, 163, 184)));
+                        ui.label(RichText::new("Tamanho").strong().color(Color32::from_rgb(148, 163, 184)));
                         ui.end_row();
-                    }
+
+                        for item in &report.valid_dbfs {
+                            let fname = if let Some(a) = &item.source_archive {
+                                format!("{} (em {})", item.display_name, a)
+                            } else {
+                                item.display_name.clone()
+                            };
+                            ui.label(fname);
+
+                            let sys_color = match item.system {
+                                HealthSystem::SIM => Color32::from_rgb(70, 160, 240),
+                                HealthSystem::SINASC => Color32::from_rgb(100, 200, 120),
+                                HealthSystem::SivepSrag => Color32::from_rgb(230, 160, 60),
+                                HealthSystem::SivepSg => Color32::from_rgb(200, 130, 220),
+                                HealthSystem::Dengon => Color32::from_rgb(80, 210, 210),
+                                _ => Color32::LIGHT_GRAY,
+                            };
+                            ui.label(RichText::new(item.system.code()).color(sys_color).strong());
+                            ui.label(format!("{:.1}% ({}/{})", item.match_percentage, item.matched_columns_count, item.num_columns));
+                            ui.label(RichText::new(item.standard_encoding.display_name()).color(Color32::from_rgb(120, 200, 140)));
+
+                            let priv_color = match item.privacy {
+                                PrivacyLevel::WithPersonalData => Color32::from_rgb(240, 120, 80),
+                                PrivacyLevel::WithoutPersonalData => Color32::from_rgb(100, 200, 120),
+                            };
+                            ui.label(RichText::new(item.privacy.display_name()).color(priv_color));
+
+                            ui.label(item.num_records.to_string());
+                            ui.label(format!("{:.2} MB", item.file_size_bytes as f64 / (1024.0 * 1024.0)));
+                            ui.end_row();
+                        }
+                    });
                 });
 
                 ui.add_space(12.0);
                 ui.collapsing("Exibir Detalhes de Colunas e Auditoria", |ui| {
                     for item in &report.valid_dbfs {
-                        ui.group(|ui| {
+                        ui.add_space(6.0);
+                        ui_card(ui, |ui| {
                             ui.label(RichText::new(&item.display_name).strong());
                             ui.label(format!("Sistema: {}", item.system.display_name()));
                             ui.label(format!(
@@ -1153,16 +1268,16 @@ impl DbfConverterApp {
             ui.separator();
 
             if let Some(rep) = &self.post_report {
-                ui.group(|ui| {
+                ui_card(ui, |ui| {
                     ui.label(RichText::new(format!("Finalizado em: {}", rep.completed_at)).italics());
                     ui.label(RichText::new(format!("Duração total: {}", rep.total_duration)).strong());
-                    ui.label(RichText::new(format!("Total de registros gravados: {}", rep.total_records_written)).size(16.0).color(Color32::from_rgb(80, 200, 100)));
+                    ui.label(RichText::new(format!("Total de registros gravados: {}", rep.total_records_written)).size(16.0).color(Color32::from_rgb(52, 211, 153)));
                 });
 
                 ui.add_space(8.0);
 
                 if !rep.ignored_archives_without_dbf.is_empty() {
-                    ui.group(|ui| {
+                    ui_card(ui, |ui| {
                         ui.label(RichText::new("⚠ Arquivos compactados sem DBF que foram ignorados:").color(Color32::from_rgb(240, 160, 50)));
                         for f in &rep.ignored_archives_without_dbf {
                             ui.label(format!("• {}", f));
@@ -1172,7 +1287,7 @@ impl DbfConverterApp {
                 }
 
                 if !rep.failed_files.is_empty() {
-                    ui.group(|ui| {
+                    ui_card(ui, |ui| {
                         ui.label(RichText::new("❌ Erros encontrados:").color(Color32::from_rgb(240, 80, 80)));
                         for err in &rep.failed_files {
                             ui.label(err);
@@ -1182,20 +1297,23 @@ impl DbfConverterApp {
                 }
 
                 ui.label(RichText::new("Arquivos Parquet Gerados:").strong());
-                egui::Grid::new("post_report_grid").striped(true).show(ui, |ui| {
-                    ui.label(RichText::new("Arquivo de Saída").strong());
-                    ui.label(RichText::new("Registros").strong());
-                    ui.label(RichText::new("Tamanho").strong());
-                    ui.label(RichText::new("Tempo").strong());
-                    ui.end_row();
-
-                    for item in &rep.successful_files {
-                        ui.label(&item.output_path);
-                        ui.label(item.records.to_string());
-                        ui.label(format!("{:.2} MB", item.file_size_bytes as f64 / (1024.0 * 1024.0)));
-                        ui.label(format!("{:.2}s", item.duration_ms as f64 / 1000.0));
+                ui.add_space(6.0);
+                ui_card(ui, |ui| {
+                    egui::Grid::new("post_report_grid").striped(true).spacing(Vec2::new(16.0, 8.0)).show(ui, |ui| {
+                        ui.label(RichText::new("Arquivo de Saída").strong().color(Color32::from_rgb(148, 163, 184)));
+                        ui.label(RichText::new("Registros").strong().color(Color32::from_rgb(148, 163, 184)));
+                        ui.label(RichText::new("Tamanho").strong().color(Color32::from_rgb(148, 163, 184)));
+                        ui.label(RichText::new("Tempo").strong().color(Color32::from_rgb(148, 163, 184)));
                         ui.end_row();
-                    }
+
+                        for item in &rep.successful_files {
+                            ui.label(&item.output_path);
+                            ui.label(item.records.to_string());
+                            ui.label(format!("{:.2} MB", item.file_size_bytes as f64 / (1024.0 * 1024.0)));
+                            ui.label(format!("{:.2}s", item.duration_ms as f64 / 1000.0));
+                            ui.end_row();
+                        }
+                    });
                 });
 
                 ui.add_space(12.0);
