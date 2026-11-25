@@ -24,6 +24,17 @@ fn test_date_parser_formats() {
     let d4 = parse_date_tolerant("2025-01-01");
     assert_eq!(d1, d4);
 
+    // Regressão: 20101203 (03/12/2010 em YYYYMMDD) NÃO pode ser lida como 20/10/1203
+    let d_iso_2010 = parse_date_tolerant("20101203");
+    let d_br_2010 = parse_date_tolerant("03122010");
+    let d_hyphen_2010 = parse_date_tolerant("2010-12-03");
+    assert!(d_iso_2010.is_some());
+    assert_eq!(d_iso_2010, d_br_2010);
+    assert_eq!(d_iso_2010, d_hyphen_2010);
+
+    // 20/10/2020 em DDMMYYYY (onde 2010 pareceria um ano em YYYYMMDD, mas mês=20 é inválido)
+    assert_eq!(parse_date_tolerant("20102020"), parse_date_tolerant("2020-10-20"));
+
     // Invalid / blank dates should return None
     assert_eq!(parse_date_tolerant(""), None);
     assert_eq!(parse_date_tolerant("        "), None);

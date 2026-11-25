@@ -111,11 +111,21 @@ O diagnóstico em tempo real calcula a porcentagem exata de correspondência e d
 - **Isenção de Registro Profissional**: Nomes e registros de médicos e atestantes (`CRM`, `MEDICO`, `COREN`) são dados públicos de identificação profissional e **não** classificam o paciente individualmente.
 
 ### 4. Enriquecimento dos Campos de Data e Tratamento de Tipos
-- **Converter string para Date32 (Padrão Recomendado)**:
-  - **Enriquecimento automático de datas**: identifica campos de data salvos originalmente como texto no DBF/DBC (`DTOBITO`, `DTNASC`, `DT_NOTIFIC`, `DT_SIN_PRI`, `DT_INTERNA`, etc.) nos formatos `DDMMYYYY`, `YYYYMMDD`, `DD/MM/YYYY` ou `YYYY-MM-DD` e os converte diretamente para o tipo nativo **Date32** (`YYYY-MM-DD`) do Parquet, permitindo filtros por período, ordenação cronológica e cálculos de intervalo imediatamente no R, Python ou Power BI.
-  - **Limpeza de dados**: remove espaços excedentes nas extremidades (TRIM) e converte datas inválidas (`00000000`, `________`) e valores em branco em `NULL` reais.
-- **Manter datas como TEXTO (Modo DBF Estrito)**:
-  - Respeita rigorosamente os tipos declarados no cabeçalho binário DBF, mantendo campos de data declarados como texto (`C`) sem conversão para `Date32`.
+
+O conversor oferece dois modos de tratamento de datas (`Converter string para Date32` e `Manter datas como TEXTO`) e trata cada coluna conforme o tipo binário do cabeçalho DBF e a origem da base:
+
+1. **Campos nativos do tipo `Date` (`'D'`) no cabeçalho DBF** *(em qualquer DBF — DATASUS ou genérico)*:
+   - Pela especificação oficial do formato dBase, colunas do tipo `'D'` são sempre gravadas no formato `YYYYMMDD`. O conversor realiza o parsing direto via `YYYYMMDD` para o tipo nativo **Date32** (`YYYY-MM-DD`) do Parquet, sem ambiguidade.
+2. **Campos de data salvos como texto (`'C'`) em bases conhecidas do DATASUS** *(SIM, SINASC, SIVEP, DENGON, SINAN NET)*:
+   - No modo **`Converter string para Date32` (Padrão Recomendado)**, colunas conhecidas do dicionário epidemiológico (`DTOBITO`, `DTNASC`, `DT_NOTIFIC`, `DT_SIN_PRI`, `DT_INTERNA`, etc.) são convertidas automaticamente de texto para **Date32** (`YYYY-MM-DD`).
+   - **Desambiguação segura entre `DDMMYYYY` e `YYYYMMDD`**: o parser aplica validação de ano plausível (`1850..=2100`). Com essa regra, os dois formatos de 8 dígitos tornam-se **matematicamente mutuamente exclusivos** — em `YYYYMMDD`, os dígitos 5–6 representam o mês (`01..=12`, nunca formando um ano `>= 1850`), enquanto em `DDMMYYYY` os dígitos 5–6 representam o século (`18..=21`, nunca formando um mês válido em `YYYYMMDD`). Assim, uma data como `20101203` é sempre lida corretamente como **`2010-12-03`** (e nunca como `20/10/1203`), enquanto `03122010` também é lida como **`2010-12-03`**. Também são aceitos `DD/MM/YYYY` e `YYYY-MM-DD`.
+   - **Limpeza de dados**: remove espaços excedentes nas extremidades (TRIM) e converte datas inválidas (`00000000`, `________`) e campos em branco em `NULL` reais.
+3. **E para arquivos DBF genéricos (fora dos 6 sistemas conhecidos)?**
+   - Colunas nativas tipo `'D'` → convertidas diretamente via `YYYYMMDD` para `Date32`.
+   - Colunas de texto (`'C'`) cujo nome comece com `DT_` ou `DT` (com 6 ou mais caracteres, ex.: `DT_EXAME`, `DTATEND`) → no modo **`Converter string para Date32`**, passam pelo mesmo parser seguro com validação de ano (`1850..=2100`), aceitando `DDMMYYYY`, `YYYYMMDD`, `DD/MM/YYYY` e `YYYY-MM-DD`.
+   - Todas as demais colunas de texto (`'C'`) permanecem intactas como `String UTF-8`.
+4. **Modo `Manter datas como TEXTO` (`--strict`)**:
+   - Respeita rigorosamente os tipos declarados no cabeçalho binário DBF: apenas campos nativos `'D'` viram `Date32`, e todas as colunas declaradas como texto (`'C'`) são mantidas como texto puro sem tentativa de conversão para data.
 
 ### 5. Descompressão Nativa de Arquivos DBC do DATASUS (FTP DISSEMIN)
 

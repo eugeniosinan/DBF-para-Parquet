@@ -335,7 +335,38 @@ impl DbfReader {
     }
 }
 
-/// Helper para parsing tolerante de datas comuns de bases da saúde
+/// Helper para parsing direto do padrão ISO/dBase nativo YYYYMMDD (usado em campos tipo 'D')
+pub fn parse_date_yyyymmdd(s: &str) -> Option<i32> {
+    let trimmed = s.trim();
+    if trimmed.is_empty() || trimmed.contains('_') || trimmed.starts_with("0000") || trimmed == "00000000" {
+        return None;
+    }
+
+    let epoch = NaiveDate::from_ymd_opt(1970, 1, 1).unwrap();
+    let digits: String = trimmed.chars().filter(|c| c.is_ascii_digit()).collect();
+
+    if digits.len() == 8 {
+        if let (Ok(year), Ok(month), Ok(day)) = (
+            digits[0..4].parse::<i32>(),
+            digits[4..6].parse::<u32>(),
+            digits[6..8].parse::<u32>(),
+        ) {
+            if (1850..=2100).contains(&year) {
+                if let Some(nd) = NaiveDate::from_ymd_opt(year, month, day) {
+                    return Some(nd.signed_duration_since(epoch).num_days() as i32);
+                }
+            }
+        }
+    }
+
+    None
+}
+
+/// Helper para parsing tolerante de datas em campos textuais ('C').
+/// Com validação de ano plausível (1850..=2100), os formatos DDMMYYYY e YYYYMMDD
+/// tornam-se matematicamente mutuamente exclusivos:
+/// - Em YYYYMMDD, os dígitos 5..6 são o mês (01..=12), logo os 4 últimos dígitos nunca formam um ano >= 1850.
+/// - Em DDMMYYYY, os dígitos 5..6 são o século (18..=21), logo nunca formam um mês válido (01..=12) em YYYYMMDD.
 pub fn parse_date_tolerant(s: &str) -> Option<i32> {
     let trimmed = s.trim();
     if trimmed.is_empty() || trimmed.contains('_') || trimmed.starts_with("0000") || trimmed == "00000000" {
@@ -349,14 +380,16 @@ pub fn parse_date_tolerant(s: &str) -> Option<i32> {
 
     // Se tiver 8 dígitos numéricos:
     if digits.len() == 8 {
-        // Tenta padrão DDMMYYYY (predominante em bases da saúde brasileiras)
+        // Tenta padrão DDMMYYYY (predominante em bases brasileiras tipo 'C', ex: SIM/SINASC)
         if let (Ok(day), Ok(month), Ok(year)) = (
             digits[0..2].parse::<u32>(),
             digits[2..4].parse::<u32>(),
             digits[4..8].parse::<i32>(),
         ) {
-            if let Some(nd) = NaiveDate::from_ymd_opt(year, month, day) {
-                return Some(nd.signed_duration_since(epoch).num_days() as i32);
+            if (1850..=2100).contains(&year) {
+                if let Some(nd) = NaiveDate::from_ymd_opt(year, month, day) {
+                    return Some(nd.signed_duration_since(epoch).num_days() as i32);
+                }
             }
         }
 
@@ -366,8 +399,10 @@ pub fn parse_date_tolerant(s: &str) -> Option<i32> {
             digits[4..6].parse::<u32>(),
             digits[6..8].parse::<u32>(),
         ) {
-            if let Some(nd) = NaiveDate::from_ymd_opt(year, month, day) {
-                return Some(nd.signed_duration_since(epoch).num_days() as i32);
+            if (1850..=2100).contains(&year) {
+                if let Some(nd) = NaiveDate::from_ymd_opt(year, month, day) {
+                    return Some(nd.signed_duration_since(epoch).num_days() as i32);
+                }
             }
         }
     }
@@ -424,12 +459,18 @@ impl ColumnBuilder for Date32Builder {
     fn append_raw(
         &mut self,
         raw: &[u8],
-        _field: &DbfField,
+        field: &DbfField,
         _mode: ConversionMode,
         encoding: DbfEncoding,
     ) -> Result<(), String> {
         let decoded = encoding.decode(raw);
-        match parse_date_tolerant(&decoded) {
+        let parsed = if field.field_type == DbfFieldType::Date {
+            // Campos nativos dBase tipo 'D' são sempre YYYYMMDD pela especificação do formato
+            parse_date_yyyymmdd(&decoded).or_else(|| parse_date_tolerant(&decoded))
+        } else {
+            parse_date_tolerant(&decoded)
+        };
+        match parsed {
             Some(days) => self.append_value(days),
             None => self.append_null(),
         }
