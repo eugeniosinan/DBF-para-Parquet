@@ -51,9 +51,9 @@ Com o **Apache Parquet (ZSTD)**:
 - **Tipagem Forte e Enriquecimento de Datas**: Datas salvas como texto no DBF são enriquecidas e convertidas para o formato nativo `Date32` (`YYYY-MM-DD`).
 - **Consultas Instantâneas**: Suporte a projeção e filtro direto em ferramentas modernas como **R (arrow/tidyverse)**, **Python (Polars/Pandas)** e **Power BI**.
 
-### 📊 Benchmark Real: Rust vs R (`microdatasus` / `foreign`) vs Python (`Polars` / `Pandas`)
+### 📊 Benchmark de Desempenho: Conversão de DBF e DBC para Parquet (Rust, R e Python)
 
-Para uma comparação transparente e 100% reproduzível, o benchmark abaixo foi executado com a base pública oficial do DATASUS **`DORJ2022.dbc` / `DORJ2022.dbf`** (*SIM — Mortalidade Rio de Janeiro 2022*, **150.806 registros × 87 colunas**; **11,38 MB** em `.dbc` e **70,7 MB** em `.dbf`), medindo a **média de 3 execuções consecutivas** (tempo total ponta a ponta com escrita Parquet ZSTD) e o **pico de memória RAM** (Maximum RSS via `/usr/bin/time -v`).
+Para oferecer uma referência transparente e reproduzível de tempo e consumo de memória na conversão para Parquet, o teste abaixo foi executado com a base pública oficial do DATASUS **`DORJ2022.dbc` / `DORJ2022.dbf`** (*SIM — Mortalidade Rio de Janeiro 2022*, **150.806 registros × 87 colunas**; **11,38 MB** em `.dbc` e **70,7 MB** em `.dbf`), medindo a **média de 3 execuções consecutivas** (tempo total ponta a ponta com escrita Parquet ZSTD) e o **pico de memória RAM** (Maximum RSS via `/usr/bin/time -v`).
 
 > **💻 Configuração da Máquina de Teste**
 > - **CPU**: Intel® Core™ i9-10900X @ 3.70 GHz (10 núcleos / 20 threads)
@@ -63,28 +63,28 @@ Para uma comparação transparente e 100% reproduzível, o benchmark abaixo foi 
 
 #### 1. Conversão de **DBF → Parquet (ZSTD)** (`DORJ2022.dbf` — 70,7 MB)
 
-| Ferramenta / Stack | Tempo Médio | Comparação (Tempo) | Pico de RAM | Parquet Gerado (ZSTD) | Enriquecimento de Datas (`Date32`) |
-| :--- | :---: | :---: | :---: | :---: | :---: |
-| **🦀 Rust (`dbf-para-parquet`)** | **0,98 s** | **1,0x (Referência)** | **63,6 MB** | **5,06 MB** *(92,8% menor)* | ✅ Sim (automático) |
-| **📊 R (`foreign::read.dbf` + `nanoparquet`)** | 2,25 s | 2,3x mais lento | 247,3 MB *(3,9x)* | 10,43 MB | ❌ Não (texto puro) |
-| **🐍 Python (`dbfread` + `Polars`)** | 12,66 s | 12,9x mais lento | 2.622,0 MB *(41,2x)* | 4,91 MB | ❌ Não (texto puro) |
-| **🐍 Python (`dbfread` + `Pandas` + `PyArrow`)** | 16,95 s | 17,3x mais lento | 2.514,8 MB *(39,5x)* | 5,26 MB | ❌ Não (texto puro) |
+| Ferramenta / Stack | Tempo Médio | Pico de RAM | Parquet Gerado (ZSTD) | Enriquecimento de Datas (`Date32`) |
+| :--- | :---: | :---: | :---: | :---: |
+| **🦀 Rust (`dbf-para-parquet`)** | **0,98 s** | **63,6 MB** | **5,06 MB** *(92,8% menor)* | ✅ Sim (automático) |
+| **📊 R (`foreign::read.dbf` + `nanoparquet`)** | 2,25 s | 247,3 MB | 10,43 MB | ❌ Não (texto puro) |
+| **🐍 Python (`dbfread` + `Polars`)** | 12,66 s | 2.622,0 MB | 4,91 MB | ❌ Não (texto puro) |
+| **🐍 Python (`dbfread` + `Pandas` + `PyArrow`)** | 16,95 s | 2.514,8 MB | 5,26 MB | ❌ Não (texto puro) |
 
 #### 2. Conversão de **DBC → Parquet (ZSTD)** (`DORJ2022.dbc` — 11,38 MB)
 
-No R, a simulação reproduz fielmente a leitura de `.dbc` do pacote **[`microdatasus` v3.0.0](https://github.com/rfsaldanha/microdatasus)** (de Raphael Saldanha), utilizando o mesmo descompressor C (`dbc2dbf.c` + `blast.c`) seguido de `foreign::read.dbf` e conversão para `tibble`, gravando em Parquet ZSTD com `nanoparquet`.
+No ecossistema R, incluímos como referência de leitura o motor utilizado pelo excelente pacote **[`microdatasus` v3.0.0](https://github.com/rfsaldanha/microdatasus)** (desenvolvido por Raphael Saldanha), referência consolidada na comunidade de saúde pública para download, organização e rotulagem completa de microdados do DATASUS. No teste abaixo foi executada apenas a etapa de leitura bruta do arquivo `.dbc` (`read_dbc`, usando `dbc2dbf.c` + `blast.c` e `foreign::read.dbf`) seguida de gravação em Parquet ZSTD com `nanoparquet`.
 
 | Ferramenta / Stack | Tempo Médio | Pico de RAM | Parquet Gerado (ZSTD) | Enriquecimento de Datas (`Date32`) |
 | :--- | :---: | :---: | :---: | :---: |
 | **🦀 Rust (`dbf-para-parquet`)** | **4,49 s** | **63,1 MB** | **5,06 MB** | ✅ Sim (automático) |
-| **📊 R (`microdatasus::read_dbc` + `nanoparquet`)** | **3,08 s** | 301,3 MB *(4,8x)* | 10,43 MB *(2,1x maior)* | ❌ Não (texto puro) |
-| **🐍 Python (`datasus-dbc` + `dbfread` + `Polars`)** | 16,09 s | 2.623,3 MB *(41,6x)* | 4,91 MB | ❌ Não (texto puro) |
-| **🐍 Python (`datasus-dbc` + `dbfread` + `Pandas` + `PyArrow`)** | 20,91 s | 2.515,2 MB *(39,9x)* | 5,26 MB | ❌ Não (texto puro) |
+| **📊 R (`microdatasus::read_dbc` + `nanoparquet`)** | **3,08 s** | 301,3 MB | 10,43 MB | ❌ Não (texto puro) |
+| **🐍 Python (`datasus-dbc` + `dbfread` + `Polars`)** | 16,09 s | 2.623,3 MB | 4,91 MB | ❌ Não (texto puro) |
+| **🐍 Python (`datasus-dbc` + `dbfread` + `Pandas` + `PyArrow`)** | 20,91 s | 2.515,2 MB | 5,26 MB | ❌ Não (texto puro) |
 
-#### Principais Conclusões do Benchmark
-- **Uso Constante e Mínimo de Memória (Streaming)**: o **Rust (`dbf-para-parquet`)** manteve o pico em **~63 MB de RAM** tanto em `.dbf` quanto em `.dbc` — **~4x a 5x menos RAM que o R** e **~40x menos RAM que o Python** (`~2,5 GB` de RAM). Isso permite converter bases muito grandes ou vários anos seguidos mesmo em computadores com pouca memória.
-- **Liderança Absoluta em DBF**: converteu 70,7 MB (150 mil linhas) em **menos de 1 segundo** (**2,3x mais rápido que R**, **12,9x mais rápido que Python+Polars** e **17,3x mais rápido que Python+Pandas**), reduzindo o arquivo em **92,8%** (de 70,7 MB para 5,06 MB).
-- **DBC com Valor Agregado**: embora o descompressor em C do `microdatasus` conclua a leitura pura do `.dbc` ligeiramente mais rápido (3,08 s vs 4,49 s), o **Rust (`dbf-para-parquet`)** utiliza **4,8x menos RAM**, gera um Parquet **2x menor** (5,06 MB vs 10,43 MB) e entrega a base **já tipada com enriquecimento automático de datas (`Date32`)**, limpeza de strings (`TRIM`/`NULL`), identificação do sistema e auditoria LGPD — sem precisar instalar R, compiladores ou dependências externas.
+#### Notas sobre o Benchmark e Complementaridade das Ferramentas
+- **Baixo consumo de memória (Streaming)**: o **Rust (`dbf-para-parquet`)** processa os dados em blocos (*streaming*), mantendo o pico em **~63 MB de RAM** tanto em `.dbf` quanto em `.dbc`. Isso permite converter bases extensas ou vários anos consecutivos mesmo em computadores com pouca memória disponível.
+- **Alta velocidade em DBF**: converteu 70,7 MB (150 mil registros) em menos de 1 segundo (`0,98 s`), reduzindo o arquivo em **92,8%** (para `5,06 MB`) já com tipagem de datas (`Date32`) e limpeza de strings (`TRIM`/`NULL`).
+- **Propósitos complementares**: o **`microdatasus`** se destaca no fluxo analítico em R (incluindo download direto do FTP do DATASUS e rotulagem completa das variáveis), apresentando inclusive excelente velocidade na leitura do `.dbc` em C (`3,08 s`). Já o **`DBF-para-Parquet`** tem foco específico em ser um conversor independente (interface gráfica e terminal, sem dependências externas) para transformar arquivos locais (`.dbf`, `.dbc`, `.zip`, `.rar`, `.7z`) em Apache Parquet otimizado — pronto para ser consumido em R, Python, Power BI ou qualquer outra ferramenta analítica.
 
 ---
 
@@ -130,7 +130,7 @@ O conversor oferece dois modos de tratamento de datas (`Converter string para Da
 ### 5. Descompressão Nativa de Arquivos DBC do DATASUS (FTP DISSEMIN)
 
 > [!IMPORTANT]
-> **Fim da Dependência do TabWin e read.dbc**: No repositório público oficial do DATASUS (`ftp://ftp.datasus.gov.br/dissemin/publicos/`), os microdados abertos para pesquisadores são distribuídos no formato proprietário **`.dbc`**. 
+> **Suporte Nativo ao Formato `.dbc` do DATASUS**: No repositório público oficial do DATASUS (`ftp://ftp.datasus.gov.br/dissemin/publicos/`), os microdados abertos para pesquisadores são distribuídos no formato **`.dbc`**. 
 > O **Conversor de Bases da Vigilância para Parquet** agora incorpora suporte nativo e transparente ao formato `.dbc`:
 > - **Arrastar e Soltar Direto**: Basta soltar qualquer arquivo `.dbc` na janela do programa.
 > - **Zero Configuração**: Descompacta em memória/temporário na velocidade nativa do Rust, detecta o sistema epidemiológico, audita os campos como **Base Anonimizada** e grava diretamente em Apache Parquet ZSTD.
