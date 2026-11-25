@@ -44,7 +44,7 @@ impl HealthSystem {
         }
     }
 
-    /// Retorna a codificação padrão oficial utilizada por este sistema de saúde no DATASUS / SVS / DuckDB.
+    /// Retorna a codificação padrão utilizada por este sistema de saúde (ISO-8859-1 / Windows-1252).
     pub fn standard_encoding(&self) -> DbfEncoding {
         match self {
             HealthSystem::SIM => DbfEncoding::Iso8859_1,
@@ -60,13 +60,13 @@ impl HealthSystem {
     /// Justificativa técnica do encoding padronizado
     pub fn encoding_rationale(&self) -> &'static str {
         match self {
-            HealthSystem::SIM => "Padrão oficial DATASUS/SVS para SIM (ISO-8859-1 / Windows-1252)",
-            HealthSystem::SINASC => "Padrão oficial DATASUS/SVS para SINASC (ISO-8859-1 / Windows-1252)",
-            HealthSystem::SivepSrag => "Padrão oficial DATASUS/SVS para SIVEP SRAG (ISO-8859-1 / Windows-1252)",
-            HealthSystem::SivepSg => "Padrão oficial DATASUS/SVS para SIVEP SG (ISO-8859-1 / Windows-1252)",
-            HealthSystem::Dengon => "Padrão oficial DATASUS/SVS para DENGON (ISO-8859-1 / Windows-1252)",
-            HealthSystem::SinanNet => "Padrão oficial DATASUS/SVS para SINAN NET (ISO-8859-1 / Windows-1252)",
-            HealthSystem::Other(_) => "Padrão Geral da Saúde (ISO-8859-1 / Windows-1252)",
+            HealthSystem::SIM => "Codificação padrão para SIM (ISO-8859-1 / Windows-1252)",
+            HealthSystem::SINASC => "Codificação padrão para SINASC (ISO-8859-1 / Windows-1252)",
+            HealthSystem::SivepSrag => "Codificação padrão para SIVEP SRAG (ISO-8859-1 / Windows-1252)",
+            HealthSystem::SivepSg => "Codificação padrão para SIVEP SG (ISO-8859-1 / Windows-1252)",
+            HealthSystem::Dengon => "Codificação padrão para DENGON (ISO-8859-1 / Windows-1252)",
+            HealthSystem::SinanNet => "Codificação padrão para SINAN NET (ISO-8859-1 / Windows-1252)",
+            HealthSystem::Other(_) => "Codificação padrão geral (ISO-8859-1 / Windows-1252)",
         }
     }
 }

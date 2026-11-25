@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum DbfEncoding {
     #[default]
-    Iso8859_1, // ISO-8859-1 / Windows-1252 (Padrão oficial DATASUS no DuckDB)
+    Iso8859_1, // ISO-8859-1 / Windows-1252 (Padrão)
     Cp850,     // CP850 / IBM850 (dBase III/IV MS-DOS antigo)
     Utf8,      // UTF-8
 }
@@ -12,7 +12,7 @@ pub enum DbfEncoding {
 impl DbfEncoding {
     pub fn display_name(&self) -> &str {
         match self {
-            DbfEncoding::Iso8859_1 => "ISO-8859-1 / Windows-1252 (Padrão DATASUS / DuckDB)",
+            DbfEncoding::Iso8859_1 => "ISO-8859-1 / Windows-1252 (Padrão)",
             DbfEncoding::Cp850 => "CP850 / IBM850 (MS-DOS legado)",
             DbfEncoding::Utf8 => "UTF-8",
         }

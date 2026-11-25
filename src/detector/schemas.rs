@@ -1,5 +1,5 @@
 /// Schemas oficiais e colunas conhecidas dos sistemas de vigilância epidemiológica
-/// Extraídos diretamente dos contratos oficiais de ingestão do DATASUS / SVS / DuckDB:
+/// Extraídos diretamente dos dicionários oficiais do DATASUS:
 /// - SIM (Sistema de Informações sobre Mortalidade)
 /// - SINASC (Sistema de Informações sobre Nascidos Vivos)
 /// - SIVEP SRAG (Hospitalizados por Síndrome Respiratória Aguda Grave)

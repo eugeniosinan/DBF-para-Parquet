@@ -335,7 +335,7 @@ impl DbfReader {
     }
 }
 
-/// Helper para parsing tolerante de datas comuns de bases da saúde, alinhado ao padrão DuckDB
+/// Helper para parsing tolerante de datas comuns de bases da saúde
 pub fn parse_date_tolerant(s: &str) -> Option<i32> {
     let trimmed = s.trim();
     if trimmed.is_empty() || trimmed.contains('_') || trimmed.starts_with("0000") || trimmed == "00000000" {
@@ -344,12 +344,12 @@ pub fn parse_date_tolerant(s: &str) -> Option<i32> {
 
     let epoch = NaiveDate::from_ymd_opt(1970, 1, 1).unwrap();
 
-    // 1. Extração de dígitos numéricos conforme DuckDB regexp_replace(text, '[^0-9]', '', 'g')
+    // 1. Extração de dígitos numéricos
     let digits: String = trimmed.chars().filter(|c| c.is_ascii_digit()).collect();
 
     // Se tiver 8 dígitos numéricos:
     if digits.len() == 8 {
-        // Tenta padrão DDMMYYYY (predominante em bases da saúde brasileiras no DuckDB)
+        // Tenta padrão DDMMYYYY (predominante em bases da saúde brasileiras)
         if let (Ok(day), Ok(month), Ok(year)) = (
             digits[0..2].parse::<u32>(),
             digits[2..4].parse::<u32>(),
@@ -360,7 +360,7 @@ pub fn parse_date_tolerant(s: &str) -> Option<i32> {
             }
         }
 
-        // Tenta padrão YYYYMMDD (formato nativo dBase 'D' ou datasus alternativo)
+        // Tenta padrão YYYYMMDD (formato nativo dBase 'D' ou DATASUS alternativo)
         if let (Ok(year), Ok(month), Ok(day)) = (
             digits[0..4].parse::<i32>(),
             digits[4..6].parse::<u32>(),
@@ -405,7 +405,7 @@ impl ColumnBuilder for StringBuilder {
         encoding: DbfEncoding,
     ) -> Result<(), String> {
         let decoded = encoding.decode(raw);
-        // Regra DuckDB: NULLIF(TRIM(col), '')
+        // Sanitização: converte string vazia ou só com espaços em NULL
         let trimmed = decoded.trim();
         if trimmed.is_empty() {
             self.append_null();

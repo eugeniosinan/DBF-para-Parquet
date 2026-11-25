@@ -48,15 +48,15 @@ Bases de dados em formato dBase (`.dbf`) originadas nos sistemas do DATASUS e Mi
 
 Com o **Apache Parquet (ZSTD)**:
 - **Redução de até 90%** no espaço em disco.
-- **Tipagem Forte**: Datas padronizadas no formato nativo `Date32` (`YYYY-MM-DD`).
-- **Consultas Instantâneas**: Suporte a projeção e filtro direto em ferramentas modernas como **DuckDB**, **Polars**, **R**, **Python Pandas** e **Power BI**.
+- **Tipagem Forte e Enriquecimento de Datas**: Datas salvas como texto no DBF são enriquecidas e convertidas para o formato nativo `Date32` (`YYYY-MM-DD`).
+- **Consultas Instantâneas**: Suporte a projeção e filtro direto em ferramentas modernas como **R (arrow/tidyverse)**, **Python (Polars/Pandas)** e **Power BI**.
 
 ### 📊 Benchmark Comparativo Real
 
 | Métrica | Base DBF Original | Apache Parquet (ZSTD) | Ganho |
 | :--- | :---: | :---: | :---: |
 | **Armazenamento (SIM RJ 2025)** | ~45.2 MB | **~4.8 MB** | **89.4% menor** |
-| **Tempo de Consulta SQL (DuckDB)** | 1.45 s (via scan) | **0.012 s** | **120x mais rápido** |
+| **Tempo de Leitura e Filtro Analítico** | 1.45 s (via scan) | **0.012 s** | **120x mais rápido** |
 | **Parsing de Datas** | Manual via regex/string | **Nativo (Date32)** | Sem esforço |
 | **Conformidade de Tipos** | Não garantida | Schema Arrow tipado | Integridade total |
 
@@ -65,7 +65,7 @@ Com o **Apache Parquet (ZSTD)**:
 ## 🚀 Principais Funcionalidades
 
 ### 1. Dicionário Oficial e Reconhecimento Automático de 6 Sistemas
-O conversor analisa as colunas do cabeçalho DBF antes do processamento e compara com os esquemas oficiais do DATASUS e SVS:
+O conversor analisa as colunas do cabeçalho DBF antes do processamento e compara com os esquemas oficiais do DATASUS:
 - **SIM** (*Sistema de Informações sobre Mortalidade*): 147 colunas oficiais (`NUMERODO`, `DTOBITO`, `CAUSABAS`, `ATESTANTE`, `LINHAA`, etc.)
 - **SINASC** (*Sistema de Informações sobre Nascidos Vivos*): 106 colunas oficiais (`NUMERODN`, `DTNASC`, `HORANASC`, `APGAR1`, `PARTO`, etc.)
 - **SIVEP SRAG** (*Hospitalizados por Síndrome Respiratória Aguda Grave*): 221 colunas oficiais (`NU_NOTIFIC`, `DT_NOTIFIC`, `DT_SIN_PRI`, `VACINA_COV`, `DT_INTERNA`, etc.)
@@ -75,21 +75,21 @@ O conversor analisa as colunas do cabeçalho DBF antes do processamento e compar
 
 O diagnóstico em tempo real calcula a porcentagem exata de correspondência e destaca o sistema identificado.
 
-### 2. Padronização Automática de Encoding
-- Segue estritamente a padronização oficial das rotinas de ingestão DuckDB/SVS (`ISO-8859-1` / `Windows-1252`).
-- Aplica o encoding correto automaticamente para cada sistema, com seletor manual na interface (`ISO-8859-1`, `CP850`, `UTF-8`).
+### 2. Codificação de Caracteres (Encoding)
+- **Padrão automático**: utiliza **`ISO-8859-1` / `Windows-1252`**, garantindo a leitura correta de acentos e cedilhas (`ç`, `ã`, `é`) na grande maioria das bases de saúde.
+- **Opções manuais disponíveis**: caso possua uma base mais antiga ou exportada em outro padrão, você pode escolher diretamente na interface (ou no terminal) entre **`Automático (ISO-8859-1)`**, **`ISO-8859-1`**, **`CP850` (MS-DOS antigo)** e **`UTF-8`**.
 
 ### 3. Conformidade LGPD e Auditoria de Dados Pessoais
 - **Base Identificada (Com dados pessoais de pacientes)**: Detecta campos nominais do paciente ou familiares (`NOME`, `NOMEMAE`, `NOMEPAI`, `NM_PACIENT`, `NM_MAE_PAC`, `NU_CPF`, `NU_CNS`, `ENDRES`, `CEPRES`, etc.).
 - **Base Anonimizada (Sem dados pessoais)**: Identifica bases públicas onde colunas nominais foram removidas.
 - **Isenção de Registro Profissional**: Nomes e registros de médicos e atestantes (`CRM`, `MEDICO`, `COREN`) são dados públicos de identificação profissional e **não** classificam o paciente individualmente.
 
-### 4. Tratamento Especializado de Tipos de Dados
-- **Padrão Saúde (Recomendado)**:
-  - Converte datas em texto no DBF (`DTOBITO`, `DTNASC`, `DT_NOTIFIC`, `DT_SIN_PRI`, `DT_INTERNA`, etc.) nos formatos `DDMMYYYY`, `YYYYMMDD` ou `DD/MM/YYYY` diretamente para o tipo nativo **Date32** (`YYYY-MM-DD`) do Parquet.
-  - Limpeza automática de strings (TRIM) e conversão de valores em branco ou preenchidos com underscores (`_________`) para `NULL`.
-- **Padrão DBF Estrito**:
-  - Respeita rigorosamente os tipos declarados no cabeçalho binário DBF ('C' para Utf8, 'D' para Date32, 'N'/'F' para Int32/Int64/Float64).
+### 4. Enriquecimento dos Campos de Data e Tratamento de Tipos
+- **Converter string para Date32 (Padrão Recomendado)**:
+  - **Enriquecimento automático de datas**: identifica campos de data salvos originalmente como texto no DBF/DBC (`DTOBITO`, `DTNASC`, `DT_NOTIFIC`, `DT_SIN_PRI`, `DT_INTERNA`, etc.) nos formatos `DDMMYYYY`, `YYYYMMDD`, `DD/MM/YYYY` ou `YYYY-MM-DD` e os converte diretamente para o tipo nativo **Date32** (`YYYY-MM-DD`) do Parquet, permitindo filtros por período, ordenação cronológica e cálculos de intervalo imediatamente no R, Python ou Power BI.
+  - **Limpeza de dados**: remove espaços excedentes nas extremidades (TRIM) e converte datas inválidas (`00000000`, `________`) e valores em branco em `NULL` reais.
+- **Manter datas como TEXTO (Modo DBF Estrito)**:
+  - Respeita rigorosamente os tipos declarados no cabeçalho binário DBF, mantendo campos de data declarados como texto (`C`) sem conversão para `Date32`.
 
 ### 5. Descompressão Nativa de Arquivos DBC do DATASUS (FTP DISSEMIN)
 
@@ -178,9 +178,9 @@ dbf-para-parquet-windows.exe --cli "DORJ2025.dbc" "DORJ2025.parquet"
 | **Arrastar Arquivos ou Pastas** | Passar arquivos ou diretórios como argumentos | Aceita caminhos de arquivos (`.dbf`, `.dbc`, `.zip`, `.rar`, `.7z`) ou pastas inteiras |
 | **Modo de Saída: Individual** | Padrão (ou `--out-dir <PASTA>`) | Gera um arquivo Parquet individual para cada DBF/DBC |
 | **Modo de Saída: Unificado (Merge)** | `-m`, `--merge -o <ARQUIVO.parquet>` | Concatena/consolida múltiplos arquivos em uma única tabela Parquet |
-| **Padrão Saúde de Datas (Date32)** | Padrão ativado | Converte strings DDMMAAAA / YYYYMMDD em datas nativas otimizadas para DuckDB/Polars |
-| **Modo DBF Estrito** | `--strict` | Respeita estritamente os tipos de cabeçalho do arquivo DBF original |
-| **Encoding Automático / Manual** | `--encoding <auto\|iso-8859-1\|cp850\|utf-8>` | Detecta conforme o agravo ou força uma codificação específica |
+| **Converter string para Date32** | Padrão ativado | Enriquecimento de datas: converte strings `DDMMAAAA` / `YYYYMMDD` em datas nativas (`Date32`) |
+| **Manter datas como TEXTO** | `--strict` | Respeita estritamente os tipos originais do DBF, mantendo datas em texto |
+| **Codificação (Encoding)** | `--encoding <auto\|iso-8859-1\|cp850\|utf-8>` | Padrão `ISO-8859-1`, com opções manuais para `CP850` e `UTF-8` |
 | **Aba Pré-Processamento / Auditoria LGPD** | `--inspect <ARQUIVO>` | Realiza o diagnóstico completo, contagem de linhas e auditoria LGPD sem converter |
 | **Ajuda Integrada** | `-h`, `--help` | Exibe a documentação de uso e exemplos diretamente no terminal |
 
@@ -284,35 +284,33 @@ Para quem deseja apenas dar duplo clique e abrir a tabela em formato de grade co
   - Ao associar arquivos `.parquet` a ele, o arquivo abre em uma grade visual idêntica ao Excel.
   - Possui busca textual instantânea, ordenação, paginação de grandes volumes e botão **"Export to Excel"** para gerar planilhas `.xlsx`.
 - **[Tad Data Viewer](https://www.tadviewer.com/)** (Windows, Linux e macOS - Gratuito):
-  - Interface desktop moderna desenhada especificamente para arquivos Parquet e DuckDB.
+  - Interface desktop moderna desenhada especificamente para arquivos Parquet e CSV de grande porte.
   - Permite criar tabelas dinâmicas (*pivot tables*), histogramas de distribuição e filtros multidimensionais em milissegundos.
 - **[DBeaver Community](https://dbeaver.io/)** (Windows e Linux):
-  - Gerenciador universal de dados com suporte integrado a DuckDB para navegar em pastas de arquivos Parquet via SQL visual.
+  - Gerenciador universal de dados com suporte para navegar em pastas de arquivos Parquet via interface visual.
 
 ### 4. Como Exportar do Parquet para Excel (`.xlsx`) ou CSV (Excel PT-BR)
 
 Se for necessário fornecer uma planilha para quem utiliza versões legadas do Excel:
 
-#### Exportar para CSV formatado para Excel em Português (separador `;` e acentuação correta):
-```bash
-# Via DuckDB (linha de comando em 1 segundo):
-duckdb -c "COPY (SELECT * FROM 'DORJ2025.parquet') TO 'DORJ2025_excel.csv' (HEADER, DELIMITER ';', ENCODING 'latin1');"
-```
-
-#### Exportar diretamente para arquivo `.xlsx` nativo do Excel via Python:
+#### Exportar para CSV formatado para Excel em Português (separador `;`) ou `.xlsx` via Python:
 ```python
 import polars as pl
 
-# Lê o Parquet e salva como planilha .xlsx formatada
 df = pl.read_parquet("DORJ2025.parquet")
+
+# Salvar como planilha .xlsx nativa do Excel:
 df.write_excel("DORJ2025.xlsx")
+
+# Ou salvar como CSV com separador ';' para Excel em Português:
+df.write_csv("DORJ2025_excel.csv", separator=";")
 ```
 
 ---
 
-## 📈 Análise de Dados e Scripts (R, Python e DuckDB)
+## 📈 Análise de Dados e Scripts (R e Python)
 
-### 1. No R (arrow, duckdb e tidyverse)
+### 1. No R (`arrow` e `tidyverse`)
 Pesquisadores e analistas em saúde pública podem consumir os arquivos Parquet no R com velocidade extrema:
 
 ```r
@@ -336,7 +334,7 @@ resultado <- dataset %>%
 print(head(resultado, 10))
 ```
 
-### 2. No Python (Polars, DuckDB e Pandas)
+### 2. No Python (`Polars` e `Pandas`)
 
 #### Com **Polars** (Recomendado pela velocidade ultrarrápida):
 ```python
@@ -355,24 +353,6 @@ top_causas = (
     .head(10)
 )
 print(top_causas)
-```
-
-#### Com **DuckDB** (SQL analítico de alta performance):
-```python
-import duckdb
-
-# Consulta SQL direta no arquivo sem ingestão em banco:
-con = duckdb.connect()
-res = con.execute("""
-    SELECT 
-        EXTRACT(month FROM DTOBITO) AS mes,
-        count(*) AS total_obitos
-    FROM 'DORJ2025.parquet'
-    GROUP BY mes
-    ORDER BY mes
-""").df()
-
-print(res)
 ```
 
 #### Com **Pandas**:

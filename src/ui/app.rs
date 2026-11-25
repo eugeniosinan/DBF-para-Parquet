@@ -242,7 +242,7 @@ impl Default for DbfConverterApp {
             conversion_mode: ConversionMode::EpidemiologicalDates,
             encoding_choice: EncodingChoice::AutomaticStandard,
             custom_output_dir: None,
-            custom_output_filename: "base_vigilancia_consolidada.parquet".to_string(),
+            custom_output_filename: String::new(),
             theme_mode: ThemeMode::Dark,
             theme_initialized: false,
             logo_texture: None,
@@ -728,7 +728,7 @@ impl eframe::App for DbfConverterApp {
                             "Objetivos e Funcionalidades:\n\n\
                             1. Conversão ultrarrápida de bases epidemiológicas legadas (DBF e DBC) para o padrão analítico Apache Parquet com compressão ZSTD.\n\
                             2. Reconhecimento automático de schemas oficiais: SIM, SINASC, SIVEP SRAG, SIVEP SG, DENGON e SINAN NET.\n\
-                            3. Padronização automática de encoding conforme diretrizes oficiais do DATASUS e DuckDB (ISO-8859-1 / Windows-1252).\n\
+                            3. Codificação automática (ISO-8859-1 / Windows-1252 como padrão), com opções manuais para CP850 e UTF-8.\n\
                             4. Auditoria de dados pessoais sensíveis e anonimização de acordo com a LGPD.\n\
                             5. Descompactação direta de lotes ZIP, RAR e 7Z e descompressão transparente de arquivos DBC."
                         );
@@ -740,23 +740,23 @@ impl eframe::App for DbfConverterApp {
             } else {
                 let (title, content) = match modal {
                     InfoModalType::HealthPattern => (
-                        "ℹ Informações — Padrão Saúde / DuckDB",
-                        "Como funciona o Padrão Saúde / DuckDB:\n\n\
-                        1. Conversão Inteligente de Datas:\n\
-                           • Colunas de data declaradas como texto no DBF (tipo 'C'), como DTOBITO, DTNASC, DT_NOTIFIC, DT_SIN_PRI, DT_PRISINT, etc., são convertidas no formato nativo DATE (YYYY-MM-DD) do Parquet.\n\
-                           • Extrai dígitos numéricos e reconhece tanto datas brasileiras (DDMMYYYY ou DD/MM/YYYY) quanto formato internacional (YYYYMMDD ou YYYY-MM-DD).\n\n\
+                        "ℹ Informações — Converter string para Date32",
+                        "Como funciona a conversão de datas para Date32:\n\n\
+                        1. Enriquecimento e Conversão Inteligente de Datas:\n\
+                           • Colunas de data armazenadas como texto no DBF (tipo 'C'), como DTOBITO, DTNASC, DT_NOTIFIC, DT_SIN_PRI, DT_PRISINT, etc., são convertidas automaticamente para o tipo nativo DATE (Date32 / YYYY-MM-DD) do Parquet.\n\
+                           • Reconhece tanto datas brasileiras (DDMMYYYY ou DD/MM/YYYY) quanto formato internacional (YYYYMMDD ou YYYY-MM-DD), convertendo datas vazias ou inválidas ('00000000', '________') em NULL.\n\n\
                         2. Limpeza de Campos Textuais:\n\
                            • Todos os demais campos de texto permanecem como String UTF-8 limpa.\n\
                            • Remove espaços excedentes nas extremidades (TRIM).\n\
-                           • Converte valores vazios, compostos apenas por espaços ou preenchidos com underscores ('_________') em NULL, evitando ruídos estatísticos.",
+                           • Converte valores vazios ou compostos apenas por espaços em NULL, evitando ruídos estatísticos.",
                     ),
                     InfoModalType::StrictDbf => (
-                        "ℹ Informações — Padrão DBF Estrito",
-                        "Como funciona o Padrão DBF Estrito:\n\n\
+                        "ℹ Informações — Manter datas como TEXTO",
+                        "Como funciona o modo Manter datas como TEXTO (Padrão DBF Estrito):\n\n\
                         1. Fidelidade Rígida aos Tipos do Cabeçalho:\n\
                            • Respeita estritamente o tipo de cada campo conforme definido no cabeçalho binário do arquivo DBF original.\n\
-                           • Campos declarados como Character ('C') são gravados como Utf8 / String sem nenhuma conversão para Date, mesmo que contenham datas.\n\
-                           • Campos marcados como Date ('D') seguem como Date32.\n\
+                           • Campos declarados como Character ('C') são gravados como texto (String UTF-8) sem nenhuma conversão para Date, mesmo que contenham datas.\n\
+                           • Campos já declarados como Date ('D') no DBF seguem como Date32.\n\
                            • Campos numéricos ('N' e 'F') seguem como inteiros (Int32/Int64) ou ponto flutuante (Float64) de acordo com o número de casas decimais informado no DBF.",
                     ),
                     InfoModalType::AboutAuthor => unreachable!(),
@@ -1146,23 +1146,46 @@ impl DbfConverterApp {
                 }
 
                 ui.add_space(8.0);
+                let info_icon_color = if self.is_light() {
+                    Color32::from_rgb(37, 99, 235)
+                } else {
+                    Color32::from_rgb(96, 165, 250)
+                };
                 ui.horizontal(|ui| {
-                    ui.label(RichText::new("Tratamento de Datas:").strong());
+                    ui.label(RichText::new("Tratamento de datas:").strong());
                     ui.radio_value(
                         &mut self.conversion_mode,
                         ConversionMode::EpidemiologicalDates,
-                        "Padrão Saúde / DuckDB (Date32)",
+                        "Converter string para Date32",
                     );
-                    if ui.button("ℹ").on_hover_text("Clique para ver detalhes do Padrão Saúde").clicked() {
+                    if ui
+                        .add(
+                            egui::Label::new(RichText::new("ℹ").color(info_icon_color).size(14.5))
+                                .sense(egui::Sense::click()),
+                        )
+                        .on_hover_cursor(egui::CursorIcon::PointingHand)
+                        .on_hover_text("Clique para ver detalhes sobre a conversão de datas para Date32")
+                        .clicked()
+                    {
                         self.info_modal = Some(InfoModalType::HealthPattern);
                     }
+
+                    ui.add_space(8.0);
 
                     ui.radio_value(
                         &mut self.conversion_mode,
                         ConversionMode::StrictDbfTypes,
-                        "Padrão DBF Estrito",
+                        "Manter datas como TEXTO",
                     );
-                    if ui.button("ℹ").on_hover_text("Clique para ver detalhes do Padrão Estrito").clicked() {
+                    if ui
+                        .add(
+                            egui::Label::new(RichText::new("ℹ").color(info_icon_color).size(14.5))
+                                .sense(egui::Sense::click()),
+                        )
+                        .on_hover_cursor(egui::CursorIcon::PointingHand)
+                        .on_hover_text("Clique para ver detalhes sobre manter datas como texto (Padrão DBF Estrito)")
+                        .clicked()
+                    {
                         self.info_modal = Some(InfoModalType::StrictDbf);
                     }
                 });
@@ -1173,10 +1196,10 @@ impl DbfConverterApp {
                     ui.radio_value(
                         &mut self.encoding_choice,
                         EncodingChoice::AutomaticStandard,
-                        "Automático (Oficial por Agravo)",
+                        "Automático (Padrão ISO-8859-1)",
                     ).on_hover_text(
-                        "Aplica automaticamente o padrão oficial do sistema reconhecido pelas colunas:\n\
-                        SIM, SINASC, SIVEP SRAG, SIVEP SG e DENGON utilizam ISO-8859-1 conforme padrão SVS/DuckDB."
+                        "Utiliza ISO-8859-1 / Windows-1252 como padrão para bases de saúde (SIM, SINASC, SIVEP, DENGON e SINAN NET).\n\
+                        Você também pode escolher manualmente ISO-8859-1, CP850 (DOS legado) ou UTF-8."
                     );
                     ui.radio_value(
                         &mut self.encoding_choice,
