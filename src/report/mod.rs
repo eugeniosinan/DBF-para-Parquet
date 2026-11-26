@@ -1,9 +1,132 @@
+use std::collections::HashSet;
 use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
 
 use crate::detector::DbfAnalysis;
 use crate::parquet_writer::ConversionSummaryItem;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PartialColumnInfo {
+    pub column_name: String,
+    pub present_in_count: usize,
+    pub total_files: usize,
+    pub present_in_files: Vec<String>,
+    pub missing_in_files: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SchemaCompatibilityReport {
+    pub total_files: usize,
+    pub total_unique_columns: usize,
+    pub common_columns_count: usize,
+    /// Colunas presentes apenas em parte dos arquivos (não existem em todos)
+    pub partial_columns: Vec<PartialColumnInfo>,
+    /// True quando todos têm as mesmas colunas, mas em ordem diferente
+    pub different_column_order: bool,
+    /// Códigos distintos de sistemas de saúde detectados (ex: ["SIM", "SINASC"])
+    pub distinct_systems: Vec<String>,
+    /// True se algum arquivo não pertence a nenhum sistema identificado na pré-avaliação
+    pub has_unidentified_system: bool,
+}
+
+impl SchemaCompatibilityReport {
+    pub fn has_missing_columns(&self) -> bool {
+        !self.partial_columns.is_empty()
+    }
+
+    pub fn has_mixed_systems(&self) -> bool {
+        self.distinct_systems.len() > 1
+    }
+
+    /// Merge só é permitido quando todos os arquivos pertencem a um mesmo sistema já identificado na pré-avaliação.
+    pub fn is_merge_allowed(&self) -> bool {
+        !self.has_mixed_systems() && !self.has_unidentified_system
+    }
+
+    pub fn has_differences(&self) -> bool {
+        self.has_missing_columns()
+            || self.different_column_order
+            || self.has_mixed_systems()
+            || self.has_unidentified_system
+    }
+}
+
+/// Analisa se os arquivos DBF possuem schemas idênticos ou divergentes (colunas faltantes,
+/// colunas exclusivas, ordem diferente ou sistemas distintos).
+pub fn analyze_schema_compatibility(dbfs: &[DbfAnalysis]) -> Option<SchemaCompatibilityReport> {
+    if dbfs.len() < 2 {
+        return None;
+    }
+
+    let total_files = dbfs.len();
+    let mut all_cols_ordered: Vec<String> = Vec::new();
+    let mut seen_cols: HashSet<String> = HashSet::new();
+    let mut distinct_systems: Vec<String> = Vec::new();
+    let mut has_unidentified_system = false;
+
+    for dbf in dbfs {
+        if matches!(dbf.system, crate::detector::HealthSystem::Other(_)) {
+            has_unidentified_system = true;
+        }
+        let sys_code = dbf.system.code().to_string();
+        if !distinct_systems.contains(&sys_code) {
+            distinct_systems.push(sys_code);
+        }
+        for col in &dbf.column_names {
+            if seen_cols.insert(col.clone()) {
+                all_cols_ordered.push(col.clone());
+            }
+        }
+    }
+
+    let file_col_sets: Vec<HashSet<&str>> = dbfs
+        .iter()
+        .map(|d| d.column_names.iter().map(|s| s.as_str()).collect())
+        .collect();
+
+    let mut common_columns_count = 0usize;
+    let mut partial_columns: Vec<PartialColumnInfo> = Vec::new();
+
+    for col in &all_cols_ordered {
+        let mut present_in_files = Vec::new();
+        let mut missing_in_files = Vec::new();
+
+        for (i, set) in file_col_sets.iter().enumerate() {
+            let fname = dbfs[i].display_name.clone();
+            if set.contains(col.as_str()) {
+                present_in_files.push(fname);
+            } else {
+                missing_in_files.push(fname);
+            }
+        }
+
+        if missing_in_files.is_empty() {
+            common_columns_count += 1;
+        } else {
+            partial_columns.push(PartialColumnInfo {
+                column_name: col.clone(),
+                present_in_count: present_in_files.len(),
+                total_files,
+                present_in_files,
+                missing_in_files,
+            });
+        }
+    }
+
+    let first_cols = &dbfs[0].column_names;
+    let different_column_order = dbfs[1..].iter().any(|d| &d.column_names != first_cols);
+
+    Some(SchemaCompatibilityReport {
+        total_files,
+        total_unique_columns: all_cols_ordered.len(),
+        common_columns_count,
+        partial_columns,
+        different_column_order,
+        distinct_systems,
+        has_unidentified_system,
+    })
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct PreProcessingReport {
@@ -25,6 +148,10 @@ impl PreProcessingReport {
         }
     }
 
+    pub fn schema_compatibility(&self) -> Option<SchemaCompatibilityReport> {
+        analyze_schema_compatibility(&self.valid_dbfs)
+    }
+
     pub fn to_markdown(&self) -> String {
         let mut md = String::new();
         md.push_str("# Relatório Pré-Processamento — Análise das Bases DBF\n\n");
@@ -36,6 +163,37 @@ impl PreProcessingReport {
                 md.push_str(&format!("- **{}** (nenhum arquivo .dbf encontrado internamente)\n", item));
             }
             md.push('\n');
+        }
+
+        if let Some(compat) = self.schema_compatibility() {
+            if compat.has_differences() {
+                md.push_str("### ⚠ Alerta de Diferença de Schemas (Colunas entre Arquivos):\n");
+                if compat.has_mixed_systems() {
+                    md.push_str(&format!(
+                        "- **Sistemas diferentes detectados:** {}\n",
+                        compat.distinct_systems.join(", ")
+                    ));
+                }
+                if compat.has_missing_columns() {
+                    md.push_str(&format!(
+                        "- **Colunas comuns a todos os {} arquivos:** {} de {} colunas únicas.\n",
+                        compat.total_files, compat.common_columns_count, compat.total_unique_columns
+                    ));
+                    md.push_str(&format!(
+                        "- **Colunas presentes apenas em parte dos arquivos ({}):** {}\n",
+                        compat.partial_columns.len(),
+                        compat
+                            .partial_columns
+                            .iter()
+                            .map(|c| format!("`{}` ({}/{})", c.column_name, c.present_in_count, c.total_files))
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    ));
+                } else if compat.different_column_order {
+                    md.push_str("- Todos os arquivos possuem as mesmas colunas, mas em **ordem diferente**.\n");
+                }
+                md.push_str("- **Como a unificação (Merge) trata isso:** utiliza **união por nome (`union_by_name`)** — alinha colunas de mesmo nome mesmo fora de ordem e preenche com `NULL` as colunas ausentes em algum arquivo.\n\n");
+            }
         }
 
         if self.valid_dbfs.is_empty() {

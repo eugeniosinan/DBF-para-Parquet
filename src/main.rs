@@ -246,10 +246,11 @@ fn run_cli(args: &[String], inspect_only: bool) {
 
     // Análise de cabeçalhos e schemas
     let mut analyzed_items = Vec::new();
+    let mut analyses = Vec::new();
     for (dbf_path, archive_name, original_dir, is_temp) in &dbfs_to_process {
         println!("\n--- Análise da Base: {:?} ---", dbf_path.file_name().unwrap_or_default());
         let analysis_res = DbfDetector::analyze_header(dbf_path, archive_name.clone(), original_dir.clone(), *is_temp);
-        let standard_encoding = match &analysis_res {
+        let standard_encoding = match analysis_res {
             Ok(analysis) => {
                 println!("• Base Identificada: {}", analysis.system.display_name());
                 println!(
@@ -278,7 +279,9 @@ fn run_cli(args: &[String], inspect_only: bool) {
                 if !analysis.warnings.is_empty() {
                     println!("• Avisos: {}", analysis.warnings.join("; "));
                 }
-                analysis.standard_encoding
+                let enc = analysis.standard_encoding;
+                analyses.push(analysis);
+                enc
             }
             Err(e) => {
                 eprintln!("Erro ao analisar cabeçalho DBF: {}", e);
@@ -304,6 +307,43 @@ fn run_cli(args: &[String], inspect_only: bool) {
 
     // Caso 1: Modo Unificado (--merge)
     if merge {
+        if analyses.iter().any(|a| matches!(a.system, dbf_para_parquet::detector::HealthSystem::Other(_))) {
+            eprintln!("\n🚫 Unificação (--merge) bloqueada: contém base(s) cujo sistema não foi identificado na pré-avaliação.");
+            eprintln!("   Para converter esses arquivos na mesma ação, execute sem a flag --merge (modo Individual).");
+            return;
+        }
+        if let Some(compat) = dbf_para_parquet::report::analyze_schema_compatibility(&analyses) {
+            if !compat.is_merge_allowed() {
+                eprintln!(
+                    "\n🚫 Unificação (--merge) bloqueada: não é permitido juntar arquivos de sistemas diferentes ({}).",
+                    compat.distinct_systems.join(", ")
+                );
+                eprintln!("   Para converter esses arquivos na mesma ação, execute sem a flag --merge (modo Individual).");
+                return;
+            }
+            if compat.has_differences() {
+                println!("\n⚠ ALERTA DE SCHEMAS DIFERENTES ({} arquivos do sistema {}):", compat.total_files, compat.distinct_systems.join(", "));
+                if compat.has_missing_columns() {
+                    println!(
+                        "  • Colunas comuns a todos: {} de {} colunas únicas ({} coluna(s) existem em uns e não em outros).",
+                        compat.common_columns_count,
+                        compat.total_unique_columns,
+                        compat.partial_columns.len()
+                    );
+                    let preview: Vec<String> = compat
+                        .partial_columns
+                        .iter()
+                        .take(15)
+                        .map(|c| format!("{} ({}/{})", c.column_name, c.present_in_count, c.total_files))
+                        .collect();
+                    println!("  • Colunas divergentes: {}", preview.join(", "));
+                } else if compat.different_column_order {
+                    println!("  • Todos os arquivos possuem as mesmas colunas, porém em ordem diferente.");
+                }
+                println!("  • Aplicando união por nome (union_by_name): colunas alinhadas pelo nome e ausentes preenchidas com NULL.");
+            }
+        }
+
         let input_dbf_paths: Vec<PathBuf> = analyzed_items.iter().map(|(p, ..)| p.clone()).collect();
         let first_encoding = custom_encoding.unwrap_or(analyzed_items[0].4);
 

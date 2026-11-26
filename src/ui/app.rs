@@ -10,7 +10,7 @@ use crate::archive::{ArchiveExtractionResult, ArchiveManager};
 use crate::dbf::{ConversionMode, DbfEncoding};
 use crate::detector::{DbfAnalysis, DbfDetector, HealthSystem, PrivacyLevel};
 use crate::parquet_writer::{ParquetConverter, ProgressUpdate};
-use crate::report::{PostProcessingReport, PreProcessingReport};
+use crate::report::{analyze_schema_compatibility, PostProcessingReport, PreProcessingReport};
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Default)]
 pub enum EncodingChoice {
@@ -479,9 +479,37 @@ impl DbfConverterApp {
         }
     }
 
+    /// Verifica se o modo Unificado (Merge) está bloqueado:
+    /// só permite unificar arquivos de sistemas já identificados na pré-avaliação e iguais entre si.
+    pub fn merge_block_reason(&self) -> Option<String> {
+        if self.output_mode != OutputMode::Merged || self.inspected_dbfs.is_empty() {
+            return None;
+        }
+        if self.inspected_dbfs.iter().any(|d| matches!(d.system, HealthSystem::Other(_))) {
+            return Some(
+                "Unificação bloqueada: contém base(s) cujo sistema não foi identificado na pré-avaliação. Use o modo Individual."
+                    .to_string(),
+            );
+        }
+        if let Some(compat) = analyze_schema_compatibility(&self.inspected_dbfs) {
+            if compat.has_mixed_systems() {
+                return Some(format!(
+                    "Unificação bloqueada: não é permitido juntar arquivos de sistemas diferentes ({}). Use o modo Individual.",
+                    compat.distinct_systems.join(", ")
+                ));
+            }
+        }
+        None
+    }
+
     pub fn start_conversion(&mut self) {
         if self.inspected_dbfs.is_empty() {
             self.status_message = "Nenhum arquivo DBF válido para conversão.".to_string();
+            return;
+        }
+
+        if let Some(reason) = self.merge_block_reason() {
+            self.status_message = reason;
             return;
         }
 
@@ -1114,6 +1142,10 @@ impl DbfConverterApp {
                     );
                 });
 
+                if self.output_mode == OutputMode::Merged {
+                    self.ui_schema_compatibility_warning(ui, "step3_merge_schema_warn");
+                }
+
                 ui.add_space(6.0);
                 ui.horizontal(|ui| {
                     ui.label(RichText::new("Pasta de Destino:").strong());
@@ -1233,12 +1265,17 @@ impl DbfConverterApp {
                 ui.add_space(10.0);
 
                 ui.horizontal(|ui| {
-                    let can_convert = !self.inspected_dbfs.is_empty() && !self.is_converting;
+                    let merge_blocked = self.merge_block_reason();
+                    let can_convert = !self.inspected_dbfs.is_empty()
+                        && !self.is_converting
+                        && merge_blocked.is_none();
                     let btn = ui.add_enabled(
                         can_convert,
                         egui::Button::new(
                             RichText::new(if self.is_converting {
                                 "⏳ Convertendo bases em streaming..."
+                            } else if merge_blocked.is_some() {
+                                "🚫 UNIFICAÇÃO BLOQUEADA (USE MODO INDIVIDUAL)"
                             } else {
                                 "⚡ CONVERTER PARA PARQUET (ZSTD)"
                             })
@@ -1248,6 +1285,8 @@ impl DbfConverterApp {
                         )
                         .fill(if can_convert {
                             if self.is_light() { Color32::from_rgb(5, 150, 105) } else { Color32::from_rgb(16, 185, 129) }
+                        } else if merge_blocked.is_some() {
+                            if self.is_light() { Color32::from_rgb(220, 38, 38) } else { Color32::from_rgb(153, 27, 27) }
                         } else if self.is_light() {
                             Color32::from_rgb(148, 163, 184) // Slate 400
                         } else {
@@ -1272,6 +1311,176 @@ impl DbfConverterApp {
         });
     }
 
+    fn ui_schema_compatibility_warning(&mut self, ui: &mut egui::Ui, id_salt: &str) {
+        // Alerta exibido APENAS quando o usuário escolher o modo Unificado (Merge)
+        if self.output_mode != OutputMode::Merged {
+            return;
+        }
+
+        // 1. Bloqueio rígido se houver sistemas diferentes ou sistema não identificado na pré-avaliação
+        if let Some(block_reason) = self.merge_block_reason() {
+            ui.add_space(8.0);
+            let (bg, border, title_color, body_color) = if self.is_light() {
+                (
+                    Color32::from_rgb(254, 242, 242), // Red 50
+                    Color32::from_rgb(220, 38, 38),   // Red 600
+                    Color32::from_rgb(185, 28, 28),   // Red 700
+                    Color32::from_rgb(127, 29, 29),   // Red 900
+                )
+            } else {
+                (
+                    Color32::from_rgb(48, 20, 24),
+                    Color32::from_rgb(248, 113, 113),
+                    Color32::from_rgb(252, 165, 165),
+                    Color32::from_rgb(254, 202, 202),
+                )
+            };
+
+            egui::Frame::new()
+                .fill(bg)
+                .stroke(Stroke::new(1.2_f32, border))
+                .corner_radius(egui::CornerRadius::same(8))
+                .inner_margin(egui::Margin::symmetric(12, 10))
+                .show(ui, |ui| {
+                    ui.label(
+                        RichText::new("🚫 Unificação (Merge) indisponível para esta seleção")
+                            .strong()
+                            .color(title_color),
+                    );
+                    ui.add_space(4.0);
+                    ui.label(RichText::new(block_reason).color(body_color));
+                    ui.label(
+                        RichText::new(
+                            "O modo Unificado (Merge) só junta arquivos pertencentes a um mesmo sistema epidemiológico \
+                             já identificado na pré-avaliação. Para converter arquivos de sistemas diferentes na mesma ação, \
+                             utilize o modo Individual."
+                        )
+                        .small()
+                        .color(body_color),
+                    );
+                    ui.add_space(6.0);
+                    if ui.button("🔁 Mudar para Modo Individual").clicked() {
+                        self.output_mode = OutputMode::Individual;
+                    }
+                });
+            return;
+        }
+
+        // 2. Mesmo sistema identificado, mas com schemas/colunas diferentes: alerta informativo (usuário decide)
+        let Some(compat) = analyze_schema_compatibility(&self.inspected_dbfs) else {
+            return;
+        };
+        if !compat.has_differences() {
+            return;
+        }
+
+        ui.add_space(8.0);
+        let (bg, border, title_color, body_color) = if self.is_light() {
+            (
+                Color32::from_rgb(255, 251, 235), // Amber 50
+                Color32::from_rgb(217, 119, 6),   // Amber 600
+                Color32::from_rgb(180, 83, 9),    // Amber 700
+                Color32::from_rgb(120, 53, 15),   // Amber 900
+            )
+        } else {
+            (
+                Color32::from_rgb(45, 34, 15),
+                Color32::from_rgb(245, 158, 11),
+                Color32::from_rgb(251, 191, 36),
+                Color32::from_rgb(253, 230, 138),
+            )
+        };
+
+        egui::Frame::new()
+            .fill(bg)
+            .stroke(Stroke::new(1.2_f32, border))
+            .corner_radius(egui::CornerRadius::same(8))
+            .inner_margin(egui::Margin::symmetric(12, 10))
+            .show(ui, |ui| {
+                let title = if compat.has_missing_columns() {
+                    format!(
+                        "⚠ Atenção: Schemas diferentes detectados entre os {} arquivos do mesmo sistema ({})!",
+                        compat.total_files,
+                        compat.distinct_systems.join(", ")
+                    )
+                } else {
+                    format!(
+                        "ℹ Aviso: Os {} arquivos possuem as mesmas colunas, porém em ordem diferente.",
+                        compat.total_files
+                    )
+                };
+
+                ui.label(RichText::new(title).strong().color(title_color));
+                ui.add_space(4.0);
+
+                if compat.has_missing_columns() {
+                    ui.label(
+                        RichText::new(format!(
+                            "• Colunas comuns a todos os arquivos: {} de {} colunas únicas.\n\
+                             • {} coluna(s) existem em alguns arquivos e NÃO existem em outros.",
+                            compat.common_columns_count,
+                            compat.total_unique_columns,
+                            compat.partial_columns.len()
+                        ))
+                        .color(body_color),
+                    );
+
+                    let preview: Vec<String> = compat
+                        .partial_columns
+                        .iter()
+                        .take(12)
+                        .map(|c| format!("{} ({}/{})", c.column_name, c.present_in_count, c.total_files))
+                        .collect();
+                    let suffix = if compat.partial_columns.len() > 12 {
+                        format!(" ... (+{} colunas)", compat.partial_columns.len() - 12)
+                    } else {
+                        String::new()
+                    };
+                    ui.label(
+                        RichText::new(format!("Colunas divergentes: {}{}", preview.join(", "), suffix))
+                            .small()
+                            .color(body_color),
+                    );
+
+                    ui.push_id(id_salt, |ui| {
+                        ui.collapsing(
+                            RichText::new("Ver detalhamento por coluna (em quais arquivos existe/falta)").color(title_color),
+                            |ui| {
+                                egui::ScrollArea::vertical().max_height(150.0).show(ui, |ui| {
+                                    for c in &compat.partial_columns {
+                                        ui.label(
+                                            RichText::new(format!(
+                                                "• {} ({}/{}): presente em [{}] | ausente em [{}]",
+                                                c.column_name,
+                                                c.present_in_count,
+                                                c.total_files,
+                                                c.present_in_files.join(", "),
+                                                c.missing_in_files.join(", ")
+                                            ))
+                                            .small()
+                                            .color(body_color),
+                                        );
+                                    }
+                                });
+                            },
+                        );
+                    });
+                }
+
+                ui.add_space(4.0);
+                ui.label(
+                    RichText::new(
+                        "ℹ Caso opte por prosseguir com a unificação (Merge), o conversor utiliza união por nome \
+                         (union_by_name): alinha colunas com o mesmo nome mesmo fora de ordem e preenche com NULL \
+                         as colunas ausentes em algum arquivo."
+                    )
+                    .small()
+                    .italics()
+                    .color(body_color),
+                );
+            });
+    }
+
     fn ui_pre_report(&mut self, ui: &mut egui::Ui) {
         ScrollArea::vertical().show(ui, |ui| {
             ui.horizontal(|ui| {
@@ -1289,6 +1498,8 @@ impl DbfConverterApp {
             let success = self.success_color();
             let warn = self.warning_color();
             let err_col = self.error_color();
+
+            self.ui_schema_compatibility_warning(ui, "prereport_schema_warn");
 
             if let Some(report) = &self.pre_report {
                 // Alertas de arquivos compactados sem DBF

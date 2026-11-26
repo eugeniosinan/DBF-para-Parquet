@@ -137,8 +137,10 @@ O conversor oferece dois modos de tratamento de datas (`Converter string para Da
 > - **Suporte a Pacotes Compactados**: Também aceita pacotes `.zip`, `.rar` e `.7z` contendo arquivos DBF internos, com descarte e faxina automática de temporários ao final do processamento.
 
 ### 6. Junção de Arquivos (Merge) ou Conversão Individual
-- **Conversão Individual**: Cada DBF gera seu `.parquet` correspondente (com opção de escolher nome de saída quando processado arquivo avulso).
-- **Junção de Arquivos (Merge)**: Combina múltiplos arquivos ou anos do mesmo sistema em um único arquivo `.parquet` consolidado.
+- **Conversão Individual (Padrão)**: Cada arquivo gera seu `.parquet` correspondente. Permite converter na mesma ação arquivos de sistemas diferentes (ex.: `SIM` e `SINASC` juntos) ou com schemas distintos.
+- **Junção de Arquivos (Merge)**: Combina múltiplos arquivos pertencentes a um **mesmo sistema já identificado** na pré-avaliação em um único `.parquet` consolidado.
+  - **Schemas diferentes no mesmo sistema**: Quando há colunas que existem em alguns arquivos e não em outros (comum entre anos diferentes), o conversor exibe um alerta detalhando as colunas divergentes ao escolher o modo Unificado. Caso o usuário opte por prosseguir, a junção utiliza **união por nome (`union_by_name`)**, alinhando colunas iguais mesmo fora de ordem e preenchendo com `NULL` as colunas ausentes.
+  - **Proteção contra mistura de sistemas**: Arquivos de sistemas diferentes ou não identificados não podem ser unificados no modo Merge — para convertê-los juntos na mesma ação, utiliza-se o modo Individual.
 
 ---
 
@@ -156,22 +158,36 @@ Não é necessário instalar nada! O aplicativo é um executável nativo único 
 
 ## 🖥️ Como Usar a Interface Gráfica (4 Passos)
 
+<p align="center">
+  <img src="docs/screenshot_desktop.png" alt="Interface Desktop do Conversor DBF/DBC para Parquet" width="900" />
+</p>
+
 1. **Passo 1 — Seleção de Arquivos ou Pastas**:
-   - Clique em **"Adicionar Arquivos"** ou **"Adicionar Pasta"**, ou simplesmente arraste e solte arquivos (`.dbf`, `.zip`, `.rar`, `.7z`) na janela do aplicativo.
+   - Clique em **"Adicionar Arquivos"** ou **"Adicionar Pasta"**, ou simplesmente arraste e solte arquivos (`.dbf`, `.dbc`, `.zip`, `.rar`, `.7z`) na janela do aplicativo.
 2. **Passo 2 — Diagnóstico e Padronização**:
-   - O aplicativo exibe a tabela de arquivos identificados com o nome do sistema (ex: `SIM (100% match)`), status de dados pessoais (LGPD) e encoding sugerido.
+   - O aplicativo exibe a tabela de arquivos identificados com o nome do sistema (ex: `SIM`, `SINASC`), status de dados pessoais (LGPD) e encoding sugerido.
 3. **Passo 3 — Opções de Conversão**:
-   - Escolha o modo de saída: **Individual** ou **Juntar em um único Parquet (Merge)**.
-   - Escolha o tratamento de tipos: **Padrão Saúde** (recomendado para datas automáticas) ou **Padrão DBF Estrito**.
+   - Escolha o modo de saída: **Individual** ou **Unificado (Merge)**.
+   - Escolha o tratamento de datas (**Converter string para Date32** ou **Manter datas como TEXTO**) e a codificação.
    - Defina a pasta ou arquivo de destino.
 4. **Passo 4 — Execução**:
-   - Clique em **"Iniciar Conversão"**. Acompanhe a barra de progresso em tempo real e visualize o relatório detalhado ao término.
+   - Clique em **"CONVERTER PARA PARQUET (ZSTD)"**. Acompanhe a barra de progresso em tempo real e visualize o relatório detalhado ao término.
 
 ---
 
 ## ⌨️ Modo Linha de Comando (CLI) para Automação
 
 O aplicativo inclui modo terminal completo para integração com pipelines de dados (Airflow, Cron, rotinas agendadas, scripts Bash ou PowerShell):
+
+**Exemplo no Terminal Linux:**
+<p align="center">
+  <img src="docs/screenshot_terminal_linux.png" alt="Exemplo de uso no Terminal Linux" width="840" />
+</p>
+
+**Exemplo no Terminal Windows (PowerShell):**
+<p align="center">
+  <img src="docs/screenshot_terminal_windows.png" alt="Exemplo de uso no Windows PowerShell" width="840" />
+</p>
 
 ### 💡 Exemplos Rápidos de 1 Linha (Copie e Cole)
 

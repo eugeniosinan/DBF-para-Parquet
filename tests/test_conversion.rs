@@ -364,4 +364,41 @@ fn test_dissemin_dbc_detection_and_conversion() {
     }
 }
 
+#[test]
+fn test_merge_union_by_name_and_schema_compatibility() {
+    use dbf_para_parquet::dbf::DbfEncoding;
+    use dbf_para_parquet::report::analyze_schema_compatibility;
 
+    let dbf1 = PathBuf::from("Bases de Exemplo/SINANNET/BOTUNET.DBF");
+    let dbf2 = PathBuf::from("Bases de Exemplo/SINANNET/COLENET.DBF");
+    if !dbf1.exists() || !dbf2.exists() {
+        return;
+    }
+
+    let a1 = DbfDetector::analyze_header(&dbf1, None, "SINANNET".to_string(), false).unwrap();
+    let a2 = DbfDetector::analyze_header(&dbf2, None, "SINANNET".to_string(), false).unwrap();
+
+    let compat = analyze_schema_compatibility(&[a1.clone(), a2.clone()]).unwrap();
+    assert!(compat.has_differences(), "BOTUNET e COLENET devem ter colunas específicas diferentes");
+    assert!(compat.has_missing_columns(), "Deve detectar colunas exclusivas de cada agravo");
+    assert!(compat.total_unique_columns > compat.common_columns_count);
+
+    // A junção com union_by_name deve funcionar mesmo com schemas diferentes!
+    let out_parquet = tempfile::NamedTempFile::new()
+        .unwrap()
+        .into_temp_path()
+        .with_extension("parquet");
+
+    let summary = ParquetConverter::convert_merged(
+        &[dbf1, dbf2],
+        &out_parquet,
+        ConversionMode::EpidemiologicalDates,
+        DbfEncoding::Iso8859_1,
+        None,
+    )
+    .expect("convert_merged com union_by_name deve unificar arquivos com colunas diferentes");
+
+    assert_eq!(summary.records, (a1.num_records + a2.num_records) as u64);
+    assert!(out_parquet.exists());
+    assert!(std::fs::metadata(&out_parquet).unwrap().len() > 0);
+}
