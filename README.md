@@ -154,6 +154,11 @@ Não é necessário instalar nada! O aplicativo é um executável nativo único 
 | **Windows (.zip)** | [**`dbf-para-parquet-windows.zip`**](https://github.com/eugeniosinan/DBF-para-Parquet/releases/latest/download/dbf-para-parquet-windows.zip) | Versão compactada portátil (14 MB). |
 | **Linux (64-bit)** | [**`dbf-para-parquet-linux`**](https://github.com/eugeniosinan/DBF-para-Parquet/releases/latest/download/dbf-para-parquet-linux) | Dê permissão de execução (`chmod +x`) e execute no terminal ou com duplo clique. |
 
+> [!NOTE]
+> **Aviso do Windows SmartScreen ("O Windows protegeu o computador"):**
+> Na primeira execução no Windows, o sistema pode exibir uma tela azul informando que o aplicativo não é reconhecido. Isso é normal em softwares de código aberto que não possuem certificado digital pago da Microsoft.
+> Para abrir normalmente: clique em **"Mais informações"** e, em seguida, clique em **"Executar assim mesmo"**. (Todo o código-fonte é aberto e auditável neste repositório.)
+
 ---
 
 ## 🖥️ Como Usar a Interface Gráfica (4 Passos)
